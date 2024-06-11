@@ -41,13 +41,6 @@ color () {
 
 ##########################################
 ## Starting
-#echo -e "\e[1;$[RANDOM%7+31]m                         \e[0m"
-#echo -e "\e[1;$[RANDOM%7+31]m        ______ _   _     \e[0m"
-#echo -e "\e[1;$[RANDOM%7+31]m       /  ____| | | |    \e[0m"
-#echo -e "\e[1;$[RANDOM%7+31]m  ____ \  \`--.| |_| |   \e[0m"
-#echo -e "\e[1;$[RANDOM%7+31]m / ___| \`--.  \ _   |    \e[0m "
-#echo -e "\e[1;$[RANDOM%7+31]m| (__  /\__/  / | | |      \e[0m"
-#echo -e "\e[1;$[RANDOM%7+31]m \___| \_____/\_| |_/    Linux  \e[0m"
 echo  "============================================================"
 echo -e "\e[1;$[RANDOM%7+31]m
   ███████╔ ████████═ ██╗   ██╗ 
@@ -58,10 +51,10 @@ echo -e "\e[1;$[RANDOM%7+31]m
   ╚══════╝ ╚════════╝╚═╝   ╚═╝                  
                                                     Linux
 \e[0m"
-echo -e "version:csh-20240425"
-echo -e "since 2022-5-4"
-echo -e "https://github.com/SMILENCEQ/SMILENCEQ.github.io"
-echo -e "Updated by HE-handsome"
+echo -e "--- csh - Linux初始化脚本和服务程序安装脚本"
+echo -e "--- version: v6.11"
+echo -e "--- https://github.com/SMILENCEQ/SMILENCEQ.github.io"
+#echo -e "Updated by HE-handsome"
 #echo -e "路漫漫其修远兮，吾将上下而求索"
 #echo -e "\e[1;33m脚本编写纯属个人爱好，生产环境需要自己斟酌使用\e[0m"
 echo "============================================================"
@@ -686,6 +679,7 @@ echo -e "\e[1;35m备份旧的yum源文件,挂载光盘\e[0m"
 #    if [ $? -eq 0 ];then
 #        echo -e "\e[1;32m已有挂载 \e[0m"
 #    else
+
         echo -e "\e[1;34m挂载光盘 \e[0m"
         [ -d /mnt/cdrom ] || mkdir /mnt/cdrom
         mount /dev/sr0 /mnt/cdrom
@@ -765,8 +759,7 @@ echo -e "\e[1;35m写入新的yum源文件 \e[0m"
 cat > /etc/yum.repos.d/base.repo <<EOF
 [base]
 name=CentOS
-baseurl=file:///mnt/cdrom/BaseOS
-        https://mirror.tuna.tsinghua.edu.cn/centos/\$releasever/os/\$basearch/
+baseurl=https://mirror.tuna.tsinghua.edu.cn/centos/\$releasever/os/\$basearch/
         https://mirrors.huaweicloud.com/centos/\$releasever/os/\$basearch/
         https://mirrors.cloud.tencent.com/centos/\$releasever/os/\$basearch/
         https://mirrors.aliyun.com/centos/\$releasever/os/\$basearch/
@@ -4241,7 +4234,7 @@ gpgkey=https://mirrors.aliyun.com/docker-ce/linux/centos/gpg
 [docker-ce-test]
 name=Docker CE Test - \$basearch
 baseurl=https://mirrors.aliyun.com/docker-ce/linux/centos/\$releasever/\$basearch/test
-enabled=0
+enabled=1
 gpgcheck=1
 gpgkey=https://mirrors.aliyun.com/docker-ce/linux/centos/gpg
 
@@ -4314,7 +4307,7 @@ yum -y install docker-ce-${VERSION}  docker-ce-cli-$VERSION
 [ $? -eq 0 ] && echo -e "\e[1;35m安装完成 \e[0m" || echo -e "\e[1;31m安装失败 \e[0m"
 
 
-
+sudo rm -rf /usr/bin/docker
 #使用阿里做镜像加速
 echo -e "\n\e[1;35m阿里镜像加速\e[0m"
 [ -d /etc/docker ] || mkdir -p /etc/docker
@@ -6334,17 +6327,109 @@ reset_kubenetes(){
 }
 
 
+install_docker_compose(){
+    local version=v2.27.0
+    echo -e "\e[1;32m离线下载\e[0m"
+    echo -e "\e[1;32m安装的版本:${version}\e[0m"
+    curl -L https://github.com/docker/compose/releases/download/${version}/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose
+    docker-compose --version
+    #curl -L https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-Linux-x86_64 -o /usr/local/bin/docker-compose
+}
+
+
+install_telnet(){
+echo -e "\e[1;35m==========================安装telnet=====================================\e[0m"
+
+software=(
+    "telnet"
+    "telnet-server"
+    "xinetd"
+    )
+for i in ${software[@]}
+do
+rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+done
+
+
+systemctl enable --now  xinetd.service
+systemctl enable --now  telnet.socket
+if [ $? -eq 0 ];then
+    echo ""
+else
+cat >>/etc/securetty<<EOF
+pts/0 
+pts/1
+EOF
+fi
+echo -e "\e[1;35m手动测试telnet连接是否正常\e[0m"
+}
+
+
+
+uninstall_docker(){
+#ubuntu系统上卸载docker
+  sudo systemctl stop docker
+  sudo apt-get purge docker-ce docker-ce-cli containerd.io docker-compose-plugin
+  sudo rm -rf /var/lib/docker
+  sudo rm -rf /var/lib/containerd
+  sudo rm -rf /etc/docker
+  sudo rm -rf /etc/systemd/system/docker.service
+  sudo rm -rf /etc/systemd/system/docker.socket
+  sudo rm -rf /usr/bin/docker
+  sudo rm -rf /usr/bin/docker-compose
+  sudo rm -rf /usr/bin/docker-containerd
+  sudo rm -rf /usr/bin/docker-runc
+  sudo ip link delete docker0
+  sudo apt-get autoremove
+  sudo apt-get autoclean
+  docker --version
+
+
+}
+
+
+sshpass_key(){
+IPLIST="
+10.0.0.8
+10.0.0.18
+10.0.0.7
+10.0.0.6
+10.0.0.200"
+rpm -q sshpass &> /dev/null || yum -y install sshpass
+[ -f /root/.ssh/id_rsa ] || ssh-keygen -f /root/.ssh/id_rsa
+ -P ''
+export SSHPASS=123456
+for IP in $IPLIST;do
+    { sshpass -e ssh-copy-id -o StrictHostKeyChecking=no $IP; } &
+done
+wait
+
+
+#########################################
+#vim /etc/ssh/ssh_config
+#修改下面一行
+StrictHostKeyChecking no
+cat hosts.list
+10.0.0.18
+10.0.0.28
+
+vim push_ssh_key.sh
+rpm -q sshpass &> /dev/null || yum -y install sshpass
+[ -f /root/.ssh/id_rsa ] || ssh-keygen -f /root/.ssh/id_rsa -P ''
+export SSHPASS=magedu
+while read IP;do
+sshpass -e ssh-copy-id -o StrictHostKeyChecking=no $IP
+done < hosts.list
 
 
 
 
-
-
-
-
-
-
-
+#####################
+ssh-keygen -f ~/.ssh/id_rsa -P ''
+ssh-copy-id root@'10.0.0.31'
+#####################
+}
 
 
 
@@ -6977,7 +7062,7 @@ while :;do
     cat << EOF
 
 ========================================================
-CentOS7yum源安装，只不过选项3用起来有点问题
+CentOS7yum源安装，选项3弃用
 Ubuntu安装还没写
 安装podman还没写
 二进制安装可在线可离线
@@ -6997,6 +7082,8 @@ Ubuntu安装还没写
 **********        5.Ubuntu安装                    **********
 **********        6.二进制安装                    **********
 **********        7.安装podman                    **********
+**********        8.安装docker-compose            **********
+**********        9.卸载docker                    **********
 **********                                        **********
 **********        0.退出                          ********** 
 **********                                        **********
@@ -7031,6 +7118,12 @@ case $Menu in
        ;;
 
 7)     install_podman
+       ;;
+
+8)     install_docker_compose
+       ;;
+
+9)     uninstall_docker
        ;;
 
 0)     set_et
@@ -7635,6 +7728,7 @@ while :;do
 **********         ====================           **********
 **********  18.禁用swap          19.启用swap      **********
 **********  20.修改ssh端口号     21.ubuntu远程登录**********
+**********  22.sshpass验证                        **********
 **********                                        **********
 **********  0.退出                                **********
 ************************************************************       
@@ -7705,6 +7799,9 @@ case $Menu in
         ;;
 
 21)     ubuntu_root_login
+        ;;
+
+22)     sshpass_key
         ;;
 
 1)      break
@@ -8087,6 +8184,7 @@ install_service(){
 **********           11.安装DNS                   **********
 **********           12.安装kubernetes            **********
 **********           13.安装prometheus            **********
+**********           14.安装telnet               **********
 **********                                        **********
 **********           0.退出                       **********
 **********                                        **********
@@ -8140,6 +8238,8 @@ case $Menu in
 13)     install_prometheus
         ;;
 
+14)     install_telnet
+        ;;
 
 39)     install_haproxy
         ;;
