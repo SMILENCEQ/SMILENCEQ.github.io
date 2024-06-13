@@ -1613,7 +1613,7 @@ while :;do
 read -p "输入ip: " IP
 
 
-if [[ "$IP" =~ ^([0-9]{1,3}.){3}[0-9]{1,3}$ ]];then
+if [[ "$IP" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]];then
     echo -e "\n\e[1;34m输入地址正确，继续下一步 \e[0m" "\e[1;32m                [ OK ] \e[0m\n"
     break
 else
@@ -8484,7 +8484,7 @@ sed -i "/HISTSIZE=/c\HISTSIZE=10000" /etc/profile
 
 echo export HISTTIMEFORMAT=\"%Y-%m-%d %H:%M:%S \" >> /etc/profile
 #echo HISTTIMEFORMAT=\"%Y-%m-%d %H:%M:%S \" >> /etc/profile
-
+echo  "shopt -s histappend" >> /etc/bashrc
 source /etc/profile
 
 
@@ -8533,7 +8533,7 @@ init 6
 one_step(){
     while :;do
 echo -e "\n\e[1;$[RANDOM%7+31]m ^_^~~~^_^centos7一键初始化 ^_^~~~^_^\e[0m"
-
+echo -e "\n\e[1;31m暂时弃用\e[0m"
 echo -e "\n\e[1;$[RANDOM%7+31]m1.关闭防火墙\e[0m"
 
 echo -e "\n\e[1;$[RANDOM%7+31]m2.selinux\e[0m"
