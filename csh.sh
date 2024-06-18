@@ -347,6 +347,7 @@ systemctl  restart sshd
 
 systeminfo(){
 local CORES=`cat /proc/cpuinfo | grep "cores" | wc -l`
+local CPUINFO=`cat /proc/cpuinfo  | grep name | cut -d: -f2 |uniq -c | tr -s ' '` 
 local CPUNUM=`cat /proc/cpuinfo | grep "cores" | uniq|wc -l`
 local CPUL=`cat /proc/cpuinfo | grep processor | wc -l`
 local Kernel=`uname -r`
@@ -357,7 +358,7 @@ local MEM=`free -h | head -n2 |tail -n1 | awk '{print $2}'`
 local DISK=`lsblk | grep "^sd" | awk '{print $1,$4}'`
 local DF=`df -h | grep  "^/dev/" | awk '{print $1,$2,$5,$6}'`
 
-echo -e "\n\e[1;35mCPU核数:$CORES\e[0m"
+echo -e "\n\e[1;35mCPU核数-型号:$CPUINFO\e[0m"
 echo -e "\n\e[1;35m物理CPU核数:$CPUNUM\e[0m"
 echo -e "\n\e[1;35m逻辑CPU个数:$CPUL\e[0m"
 
@@ -1224,7 +1225,7 @@ fi
 
   
 echo -e "\e[1;35m写入新的yum源文件 \e[0m"
-cat > /etc/yum.repos.d/base.repo << EOF
+cat > /etc/yum.repos.d/base.repo <<EOF
 [base]
 name=CentOS-7 - Base - tsinghua
 baseurl=https://mirrors.tuna.tsinghua.edu.cn/centos/7/os/x86_64/
@@ -6674,7 +6675,28 @@ ${PURPLE} haproxy $END
 
 
 install_jenkins(){
-${PURPLE} jenkins $END
+    sudo yum install -y java-11-openjdk-devel
+    wget https://mirrors.tuna.tsinghua.edu.cn/jenkins/redhat-stable/jenkins-2.452.2-1.1.noarch.rpm
+    rpm -ivh jenkins-2.452.2-1.1.noarch.rpm
+    systemctl enable --now  jenkins
+    sudo firewall-cmd --permanent --zone=public --add-port=8080/tcp
+    sudo firewall-cmd --reload
+    sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+    sed -i.bak 's#updates.jenkins.io/download#mirrors.tuna.tsinghua.edu.cn/jenkins#g' ./data/updates/default.json  
+    sed -i.bak 's#www.google.com#www.baidu.com#g' ./data/updates/default.json 
+#修改镜像源
+vim /var/lib/jenkins/hudson.model.UpdateCenter.xml 
+<?xml version='1.1' encoding='UTF-8'?>
+<sites>
+  <site>
+    <id>default</id>
+    <url>http://mirror.esuni.jp/jenkins/updates/update-center.json</url>
+    https://jenkins-zh.gitee.io/update-center-mirror/tsinghua/update-
+center.json
+https://mirrors.tuna.tsinghua.edu.cn/jenkins/updates/update-center.json
+  </site>
+</sites>
+
 }
 
 install_halo(){
@@ -8479,9 +8501,9 @@ else
 
 fi
 
-
-sed -i "/HISTSIZE=/c\HISTSIZE=10000" /etc/profile
-
+#这两种都可以修改
+#sed -i "/HISTSIZE=/c\HISTSIZE=10000" /etc/profile
+sed -i 's/^HISTSIZE=.*/HISTSIZE=10000/' /etc/profile
 echo export HISTTIMEFORMAT=\"%Y-%m-%d %H:%M:%S \" >> /etc/profile
 #echo HISTTIMEFORMAT=\"%Y-%m-%d %H:%M:%S \" >> /etc/profile
 echo  "shopt -s histappend" >> /etc/bashrc
