@@ -16,7 +16,6 @@ get_system_info() {
     disk_info="磁盘使用: $disk_usage"
 
     # 获取内存使用情况
-    #memory_info=$(free -m | awk 'NR==2{printf "内存使用: %s/%sMB (%.2f%%)\n", $3, $2, $3*100/$2 }')
     memory_info=$(free -h | awk 'NR==2{print "内存使用:"$3 "\n剩余可用:"$4}')
 
     echo -e "$disk_info\n$memory_info"

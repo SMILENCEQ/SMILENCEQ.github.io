@@ -45,7 +45,7 @@ rpm -q  $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y inst
 done
 
 
-#yum -y install vim lrzsz tar.x86_64 net-tools.x86_64 telnet ftp bridge-utils.x86_64 libtalloc libtalloc-devel psmisc libpcap libpcap-devel tcpdump
+
 
 sleep 2
 
