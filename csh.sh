@@ -41,6 +41,7 @@ color () {
 
 ##########################################
 ## Starting
+CshVersion=v4.7.09
 echo  "============================================================"
 echo -e "\e[1;$[RANDOM%7+31]m
   ███████╔ ████████═ ██╗   ██╗ 
@@ -52,7 +53,7 @@ echo -e "\e[1;$[RANDOM%7+31]m
                                                     Linux
 \e[0m"
 echo -e "--- csh - Linux初始化脚本和服务程序安装脚本"
-echo -e "--- version: v6.11"
+echo -e "--- version: $CshVersion"
 echo -e "--- https://github.com/SMILENCEQ/SMILENCEQ.github.io"
 #echo -e "Updated by HE-handsome"
 #echo -e "路漫漫其修远兮，吾将上下而求索"
@@ -6433,15 +6434,282 @@ ssh-copy-id root@'10.0.0.31'
 }
 
 
+ssh_auth(){
+
+target_file="/etc/profile.d/system_info.sh"
+cat << 'EOF' > $target_file
+#/bin/bash
+#Copyright (c) [2019] Huawei Technologies Co., Ltd.
+#generic-release is licensed under the Mulan PSL v2.
+#You can use this software according to the terms and conditions of the Mulan PSL v2.
+#You may obtain a copy of Mulan PSL v2 at:
+#     http://license.coscl.org.cn/MulanPSL2
+#THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR
+#IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
+#PURPOSE.
+#See the Mulan PSL v2 for more details.
+
+# Welcome
+welcome=$(uname -r)
+
+# Memory
+memory_total=$(cat /proc/meminfo | awk '/^MemTotal:/ {printf($2)}')
+memory_free=$(cat /proc/meminfo | awk '/^MemFree:/ { printf($2)}')
+buffers=$(cat /proc/meminfo | awk '/^Buffers:/ { printf($2)}')
+cached=$(cat /proc/meminfo | awk '/^Cached:/ { printf($2)}')
+sreclaimable=$(cat /proc/meminfo | awk '/^SReclaimable:/ { printf($2)}')
+swap_total=$(cat /proc/meminfo | awk '/^SwapTotal:/ { printf($2)}')
+swap_free=$(cat /proc/meminfo | awk '/^SwapFree:/ { printf($2)}')
+
+if [ $memory_total -gt 0 ]
+then
+    memory_usage=`echo "scale=1; ($memory_total - $memory_free - $buffers - $cached - $sreclaimable) * 100.0 / $memory_total" |bc`
+    memory_usage="${memory_usage}%"
+else
+    memory_usage=0.0%
+fi
+
+# Swap memory
+if [ $swap_total -gt 0 ]
+then
+    swap_mem=`echo "scale=1; ($swap_total - $swap_free) * 100.0 / $swap_total" |bc`
+    swap_mem="${swap_mem}%"
+else
+    swap_mem=0.0%
+fi
+
+# Usage
+usageof=$(df -h / | awk '/\// {print $(NF-1)}')
+
+# System load
+load_average=$(awk '{print $1}' /proc/loadavg)
+
+# WHO I AM
+whoiam=$(whoami)
+
+# Time
+time_cur=$(date)
+
+# Processes
+processes=$(ps aux | wc -l)
+
+# Users
+user_num=$(users | wc -w)
+
+# Ip address
+ip_pre=""
+if [ -x "/sbin/ip" ]
+then
+    ip_pre=$(/sbin/ip a | grep inet | grep -v "127.0.0.1" | grep -v inet6 | awk '{print $2}')
+fi
+
+echo -e "\n"
+echo -e "Welcome to $welcome\n"
+echo -e "System information as of time: \t$time_cur\n"
+echo -e "System load: \t\033[0;33;40m$load_average\033[0m"
+echo -e "Processes: \t$processes"
+echo -e "Memory used: \t$memory_usage"
+echo -e "Swap used: \t$swap_mem"
+echo -e "Usage On: \t$usageof"
+for line in $ip_pre
+do
+    ip_address=${line%/*}
+    echo -e "IP address: \t$ip_address"
+done
+echo -e "Users online: \t$user_num"
+if [ "$whoiam" == "root" ]
+then
+    echo -e "\n"
+else
+    echo -e "To run a command as administrator(user \"root\"),use \"sudo <command>\"."
+fi
+EOF
+echo -e "\n\e[1;32m内容已成功写入 $target_file\e[0m"
+}
+
+
+ssh_auth1(){
+
+
+cat > /etc/profile.d/system_info.sh << 'EOF' 
+#/bin/bash
+#Copyright (c) [2019] Huawei Technologies Co., Ltd.
+#generic-release is licensed under the Mulan PSL v2.
+#You can use this software according to the terms and conditions of the Mulan PSL v2.
+#You may obtain a copy of Mulan PSL v2 at:
+#     http://license.coscl.org.cn/MulanPSL2
+#THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR
+#IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
+#PURPOSE.
+#See the Mulan PSL v2 for more details.
+
+# Welcome
+welcome=$(uname -r)
+
+# Memory
+memory_total=$(cat /proc/meminfo | awk '/^MemTotal:/ {printf($2)}')
+memory_free=$(cat /proc/meminfo | awk '/^MemFree:/ { printf($2)}')
+buffers=$(cat /proc/meminfo | awk '/^Buffers:/ { printf($2)}')
+cached=$(cat /proc/meminfo | awk '/^Cached:/ { printf($2)}')
+sreclaimable=$(cat /proc/meminfo | awk '/^SReclaimable:/ { printf($2)}')
+swap_total=$(cat /proc/meminfo | awk '/^SwapTotal:/ { printf($2)}')
+swap_free=$(cat /proc/meminfo | awk '/^SwapFree:/ { printf($2)}')
+
+if [ $memory_total -gt 0 ]
+then
+    memory_usage=`echo "scale=1; ($memory_total - $memory_free - $buffers - $cached - $sreclaimable) * 100.0 / $memory_total" |bc`
+    memory_usage="${memory_usage}%"
+else
+    memory_usage=0.0%
+fi
+
+# Swap memory
+if [ $swap_total -gt 0 ]
+then
+    swap_mem=`echo "scale=1; ($swap_total - $swap_free) * 100.0 / $swap_total" |bc`
+    swap_mem="${swap_mem}%"
+else
+    swap_mem=0.0%
+fi
+
+# Usage
+usageof=$(df -h / | awk '/\// {print $(NF-1)}')
+
+# System load
+load_average=$(awk '{print $1}' /proc/loadavg)
+
+# WHO I AM
+whoiam=$(whoami)
+
+# Time
+time_cur=$(date)
+
+# Processes
+processes=$(ps aux | wc -l)
+
+# Users
+user_num=$(users | wc -w)
+
+# Ip address
+ip_pre=""
+if [ -x "/sbin/ip" ]
+then
+    ip_pre=$(/sbin/ip a | grep inet | grep -v "127.0.0.1" | grep -v inet6 | awk '{print $2}')
+fi
+
+echo -e "\n"
+echo -e "Welcome to $welcome\n"
+echo -e "System information as of time: \t$time_cur\n"
+echo -e "System load: \t\033[0;33;40m$load_average\033[0m"
+echo -e "Processes: \t$processes"
+echo -e "Memory used: \t$memory_usage"
+echo -e "Swap used: \t$swap_mem"
+echo -e "Usage On: \t$usageof"
+for line in $ip_pre
+do
+    ip_address=${line%/*}
+    echo -e "IP address: \t$ip_address"
+done
+echo -e "Users online: \t$user_num"
+if [ "$whoiam" == "root" ]
+then
+    echo -e "\n"
+else
+    echo -e "To run a command as administrator(user \"root\"),use \"sudo <command>\"."
+fi
+EOF
+echo -e "\n\e[1;32m内容已成功写入 $target_file\e[0m"
+}
 
 
 
+mail_alarm(){
 
+echo -e "\n\e[1;33m脚本适用于centos7系统,不适用于openEuler系统\e[0m"
+read -p "属于接收告警信息的邮箱地址:" EMAIL
+alarm_file="/root/monitor.sh"
+cat << EOF > $alarm_file
+#!/bin/bash
 
+rpm -qa mailutils || yum -y install mailutils
+# 定义发送邮件的函数
+send_email() {
+    local subject=\$1
+    local body=\$2
+    local recipient=$EMAIL
 
+    echo -e "\$body" | mail -s "\$subject" "\$recipient"
+}
 
+# 获取系统信息的函数
+get_system_info() {
+    # 获取磁盘使用情况
+    disk_usage=\$(df -h  | awk 'NR==6{print "磁盘已用:"\$3 "\n磁盘剩余可用:"\$4"\n磁盘使用率:"\$5}')
+    disk_info="\$disk_usage"
 
+    # 获取内存使用情况
+    #memory_info=\$(free -m | awk 'NR==2{printf "内存使用: %s/%sMB (%.2f%%)\n", \$3, \$2, \$3*100/\$2 }')
+    memory_info=\$(free -h | awk 'NR==2{print "内存使用:"\$3 "\n剩余可用:"\$4}')
 
+    echo -e "\$disk_info\n\$memory_info"
+}
+
+# 主函数
+main() {
+    while true; do
+        system_info=\$(get_system_info)
+        send_email "系统资源监控" "\$system_info"
+        # 每小时发送一次报告
+        sleep 3
+    done
+}
+
+# 执行主函数
+main
+EOF
+chmod +x monitor.sh
+#./monitor.sh
+nohup ./monitor.sh &
+exit
+}
+
+mail_alarm1() {
+
+    echo -e "\n\e[1;33m脚本适用于centos7系统,不适用于openEuler系统\e[0m"
+    read -p "属于接收告警信息的邮箱地址:" EMAIL
+    alarm_file="/root/monitor.sh"
+    
+    # 使用 printf 来创建文件，并在其中插入变量
+    printf '#!/bin/bash\n\n' \
+    'rpm -qa mailutils || yum -y install mailutils\n' \
+    'send_email() {\n' \
+    '    local subject=$1\n' \
+    '    local body=$2\n' \
+    '    local recipient=%s\n' \
+    '    echo -e "$body" | mail -s "$subject" "$recipient"\n' \
+    '}\n\n' \
+    'get_system_info() {\n' \
+    '    disk_usage=$(df -h | awk '\''NR==6{print "磁盘已用:"$3 "\n磁盘剩余可用:"$4"\n磁盘使用率:"$5}'\'')\n' \
+    '    disk_info="$disk_usage"\n\n' \
+    '    memory_info=$(free -h | awk '\''NR==2{print "内存使用:"$3 "\n剩余可用:"$4}'\'')\n' \
+    '    echo -e "$disk_info\n$memory_info"\n' \
+    '}\n\n' \
+    'main() {\n' \
+    '    while true; do\n' \
+    '        system_info=$(get_system_info)\n' \
+    '        send_email "系统资源监控" "$system_info"\n' \
+    '        sleep 3600\n' \
+    '    done\n' \
+    '}\n\n' \
+    'main\n' \
+    > $alarm_file
+    
+    chmod +x $alarm_file
+    # 运行脚本
+    # ./monitor.sh
+    # nohup ./monitor.sh &
+    # exit
+}
 
 
 
@@ -6675,27 +6943,28 @@ ${PURPLE} haproxy $END
 
 
 install_jenkins(){
-    sudo yum install -y java-11-openjdk-devel
-    wget https://mirrors.tuna.tsinghua.edu.cn/jenkins/redhat-stable/jenkins-2.452.2-1.1.noarch.rpm
-    rpm -ivh jenkins-2.452.2-1.1.noarch.rpm
-    systemctl enable --now  jenkins
-    sudo firewall-cmd --permanent --zone=public --add-port=8080/tcp
-    sudo firewall-cmd --reload
-    sudo cat /var/lib/jenkins/secrets/initialAdminPassword
-    sed -i.bak 's#updates.jenkins.io/download#mirrors.tuna.tsinghua.edu.cn/jenkins#g' ./data/updates/default.json  
-    sed -i.bak 's#www.google.com#www.baidu.com#g' ./data/updates/default.json 
+    ${PURPLE} 占坑 $END
+#    sudo yum install -y java-11-openjdk-devel
+#    wget https://mirrors.tuna.tsinghua.edu.cn/jenkins/redhat-stable/jenkins-2.452.2-1.1.noarch.rpm
+#    rpm -ivh jenkins-2.452.2-1.1.noarch.rpm
+#    systemctl enable --now  jenkins
+#    sudo firewall-cmd --permanent --zone=public --add-port=8080/tcp
+#    sudo firewall-cmd --reload
+#    sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+#    sed -i.bak 's#updates.jenkins.io/download#mirrors.tuna.tsinghua.edu.cn/jenkins#g' ./data/updates/default.json  
+#    sed -i.bak 's#www.google.com#www.baidu.com#g' ./data/updates/default.json 
 #修改镜像源
-vim /var/lib/jenkins/hudson.model.UpdateCenter.xml 
-<?xml version='1.1' encoding='UTF-8'?>
-<sites>
-  <site>
-    <id>default</id>
-    <url>http://mirror.esuni.jp/jenkins/updates/update-center.json</url>
-    https://jenkins-zh.gitee.io/update-center-mirror/tsinghua/update-
-center.json
-https://mirrors.tuna.tsinghua.edu.cn/jenkins/updates/update-center.json
-  </site>
-</sites>
+#vim /var/lib/jenkins/hudson.model.UpdateCenter.xml 
+#<?xml version='1.1' encoding='UTF-8'?>
+#<sites>
+#  <site>
+#    <id>default</id>
+#    <url>http://mirror.esuni.jp/jenkins/updates/update-center.json</url>
+#    https://jenkins-zh.gitee.io/update-center-mirror/tsinghua/update-
+#center.json
+#https://mirrors.tuna.tsinghua.edu.cn/jenkins/updates/update-center.json
+#  </site>
+#</sites>
 
 }
 
@@ -7750,7 +8019,8 @@ while :;do
 **********         ====================           **********
 **********  18.禁用swap          19.启用swap      **********
 **********  20.修改ssh端口号     21.ubuntu远程登录**********
-**********  22.sshpass验证                        **********
+**********  22.sshpass验证       23.ssh登录显示   **********
+**********  24.邮箱告警                           **********
 **********                                        **********
 **********  0.退出                                **********
 ************************************************************       
@@ -7824,6 +8094,12 @@ case $Menu in
         ;;
 
 22)     sshpass_key
+        ;;
+
+23)     ssh_auth
+        ;;
+
+24)     mail_alarm
         ;;
 
 1)      break
@@ -8312,44 +8588,46 @@ done
 
 
 update_log(){
+
 echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
-                 echo "2024-4-25 version:csh"
-                 echo "升级openssl openssh两个版本"
-echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
-                 echo "2023-5-26 version:csh"
-                 echo "新增zabbix,dns"
-echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
-                 echo "2023-2-17 version:csh"
-                 echo "新增keepalived"
-echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
-                 echo "2023-2-15 version:csh"
-                 echo "新增redis"
-echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
-                 echo "2023-2-3 version:csh"
-                 echo "新增clickhouse"
-echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
-                 echo "2023-2-2 version:csh"
-                 echo "新增docker"
-echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
-                 echo "2023-1-27 version:csh"
-                 echo "升级nginx，升级openssl"
-echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
-                 echo "2022-12-27 version:csh-v1.0"
-                 echo "改进网卡配置流程"
-echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
-                 echo "2022-12-07 version:csh-v9.7.7.06"
-                 echo "添加编译升级安装openssh，openssl"
-echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
-                 echo "2022-11-28 version:csh-v9.7.7.04"
-                 echo "完善一些功能"
-echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
-                 echo "2022-11-27 version:csh-v9.7.7.02"
-                 echo "添加mariadb，yum安装，二进制安装"
-echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
-                 echo "2022-11-26 version:csh-v9.7.7.01"
+                 echo "2022-11-26 version:v2.11.26"
                  echo "修改centos7yum源，"
 echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
-
+                 echo "2022-11-27 version:v2.11.27"
+                 echo "添加mariadb，yum安装，二进制安装"
+echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
+                 echo "2022-11-28 version:v2.11.28"
+                 echo "完善一些功能"
+echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
+                 echo "2022-12-07 version:v2.12.07"
+                 echo "添加编译升级安装openssh，openssl"
+echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
+                 echo "2022-12-27 version:v2.12.27"
+                 echo "改进网卡配置流程"
+echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
+                 echo "2023-1-27 version:v3.1.27"
+                 echo "升级nginx，升级openssl"
+echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
+                 echo "2023-2-2 version:v3.2.2"
+                 echo "新增docker"
+echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
+                 echo "2023-2-3 version:v3.2.3"
+                 echo "新增clickhouse"
+echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
+                 echo "2023-2-15 version:v3.2.15"
+                 echo "新增redis"
+echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
+                 echo "2023-2-17 version:v3.2.17"
+                 echo "新增keepalived"
+echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
+                 echo "2023-5-26 version:v3.5.26"
+                 echo "新增zabbix,dns"
+echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
+                 echo "2024-4-25 version:v4.4.25"
+                 echo "升级openssl openssh两个版本"
+echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
+                 echo "2024-7-09 version:$CshVersion"
+                 echo "添加邮箱告警功能,ssh登录显示功能"
 }
 
 re(){
