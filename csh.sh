@@ -86,7 +86,7 @@ echo -e "\e[1;$[RANDOM%7+31]m
 ╚██        ╚════ ██  ██║   ██║ 
   ███████╔ ████████  ██║   ██║ 
   ╚══════╝ ╚════════╝╚═╝   ╚═╝                  
-                                                    Linux
+                                    Linux
 \e[0m"
 echo -e "--- csh - Linux初始化脚本和服务程序安装脚本"
 echo -e "--- version: $CshVersion"
