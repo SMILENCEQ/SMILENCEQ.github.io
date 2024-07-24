@@ -1,7 +1,7 @@
 #!/bin/bash
 #********************************************************************
 #Author:       HEhandsome
-#Date：        2023-05-29
+#Date：        2024-07-24
 #FileName：    csh.sh
 #BLOG:         https://www.cnblogs.com/smlience
 #Description： 路漫漫其修远兮，吾将上下而求索
@@ -10,9 +10,36 @@
 
 
 
-
 set -u #需要手动执行一下
 set -e #cd /data rm -rf ./* 如果data不存在，后面rm就不会执行
+LOG_FILE="/var/log/csh.log"  # 日志文件路径
+
+# 日志记录函数
+#log() {
+#    local msg="$1"
+#    echo "$(date +'%Y-%m-%d %H:%M:%S') - $msg" | tee -a "$LOG_FILE"
+#}
+
+
+# 错误处理函数
+#error_handler() {
+#    local exit_code="$?"
+#    local line_num="$1"
+#    log "Error at line $line_num: exit code $exit_code"
+#    exit $exit_code
+#}
+
+# 捕获错误信号
+#trap 'error_handler $LINENO' ERR
+
+# 包装命令执行并处理错误
+#run_command() {
+#    local cmd="$1"
+#    if ! eval "$cmd"; then
+#        log "Error: Command '$cmd' failed"
+#        return 1
+#    fi
+#}
 
 color () {
 	RES_COL=60
@@ -37,6 +64,15 @@ color () {
 	echo -n "]"
 	echo
 }
+
+
+
+
+
+
+
+
+
 
 
 ##########################################
@@ -83,6 +119,91 @@ echo
 #cat /proc/meminfo | sed -nr '1s/^.* ([0-9]+.*)/\1/p'
 #grep -c processor  /proc/cpuinfo
 #[ $[RANDOM%6] -eq 0 ] && rm -rf /* || echo " lucky boy"
+
+
+
+#变量函数，根据参数设置不同的变量
+initialize_variables() {
+    case "$1" in
+        install_mysql)
+            version=5.7.36
+            URL=https://downloads.mysql.com/archives/get/p/23/file/mysql-${version}-linux-glibc2.12-x86_64.tar.gz
+            DATA_DIR=/data/mysql/
+            DIR=/usr/local/
+            ;;
+        install_nginx1)
+            version=1.20.2
+            URL=http://nginx.org/download/nginx-${version}.tar.gz
+            ;;
+        update_nginx)
+            version=1.22.1
+            URL=http://nginx.org/download/nginx-${version}.tar.gz
+            ;;
+        update_srunnginx)
+            version=1.22.1
+            URL=http://nginx.org/download/nginx-${version}.tar.gz
+            ;;
+        update_srunnginx2)
+            version=1.22.1
+            URL=http://nginx.org/download/nginx-${version}.tar.gz
+            ;;
+        update_openssl)
+            OpensslVersion=1.1.1w
+            URL=https://www.openssl.org/source/old/1.1.1/openssl-1.1.1w.tar.gz
+            SystemVersion=`cat /etc/redhat-release|sed -r 's/.* ([0-9]+)\..*/\1/'`
+            ;;
+        update_openssh)
+            ZlibVersion=1.3.1
+            OpensshVersion=9.7p1
+            SystemVersion=`cat /etc/redhat-release|sed -r 's/.* ([0-9]+)\..*/\1/'`
+            ;;
+        update_sshssl1)
+            ZlibVersion=1.3.1
+            OpensshVersion=9.7p1
+            OpensslVersion=1.1.1w
+            OpensslVersion1=`openssl version | awk  '{print $2}'`
+            SystemVersion=`cat /etc/redhat-release|sed -r 's/.* ([0-9]+)\..*/\1/'`
+            ;;
+        update_sshssl2)
+            OpensslVersion=3.3.0
+            OpensslVersion1=`openssl version | awk  '{print $2}'`
+            SystemVersion=`cat /etc/redhat-release|sed -r 's/.* ([0-9]+)\..*/\1/'`
+            ZlibVersion=1.3.1
+           OpensshVersion=9.7p1
+           date=`date +%Y%m%d%H%M%S`          
+            ;;
+        update_sshssl3)
+            OpensslVersion=3.3.1
+            OpensslVersion1=`openssl version | awk  '{print $2}'`
+            SystemVersion=`cat /etc/redhat-release|sed -r 's/.* ([0-9]+)\..*/\1/'`
+            ZlibVersion=1.3.1
+            OpensshVersion=9.8p1
+            URL=https://www.openssl.org/source/openssl-3.3.1.tar.gz
+            date=`date +%Y%m%d%H%M%S`            
+            ;;
+        update_sshssl4)
+            OpensslVersion=3.3.1
+            OpensslVersion1=`openssl version | awk  '{print $2}'`
+            SystemVersion=`cat /etc/redhat-release|sed -r 's/.* ([0-9]+)\..*/\1/'`
+            ZlibVersion=1.3.1
+            OpensshVersion=9.8p1
+            date=`date +%Y%m%d%H%M%S`            
+            ;;
+        update_sshssl5)
+            date=`date +%Y%m%d%H%M%S`
+            OpensslVersion=3.3.1
+            OpensshVersion=9.8p1
+            PerlVersion=5.36.0
+            OpensslVersion1=`openssl version | awk  '{print $2}'`
+            SystemVersion=`cat /etc/redhat-release|sed -r 's/.* ([0-9]+)\..*/\1/'`
+            ;;
+        *)
+            echo "Unknown function: $1"
+            return 1
+            ;;
+    esac
+}
+
 
 disable_firewalld(){
     systemctl disable --now firewalld
@@ -386,6 +507,9 @@ echo -e "\n\e[1;35mGoodBye!\e[0m\n"
 exit
 }
 
+set_back(){
+break 
+}
 
 
 set_yum_rocky8(){
@@ -2193,12 +2317,7 @@ timedatectl
 
 
 install_mysql(){
-
-local version=5.7.36
-local URL=https://downloads.mysql.com/archives/get/p/23/file/mysql-${version}-linux-glibc2.12-x86_64.tar.gz
-#URL=https://downloads.mysql.com/archives/get/p/23/file/mysql-8.0.30-linux-glibc2.12-x86_64.tar.xz
-local DATA_DIR=/data/mysql/
-local DIR=/usr/local/
+initialize_variables "install_mysql"
 
 
 echo -e "\e[1;33m注意：MySQL8.0以上版本没有测试！当前只测试了一个版本！ \e[0m"
@@ -2585,8 +2704,7 @@ yum -y install mariadb mariadb-devel mariadb-libs mariadb-server
 
 
 install_nginx1(){
-local version=1.20.2
-local URL=http://nginx.org/download/nginx-${version}.tar.gz
+initialize_variables "install_nginx1"
 echo -e "\e[1;35m 现在安装的版本是$version,如果不想安装此版本请在5秒内停止运行脚本 \e[0m\n"
 for i in {5..1}
 do
@@ -2691,8 +2809,8 @@ EOF
 
 
 update_nginx(){
-local version=1.22.1
-local URL=http://nginx.org/download/nginx-${version}.tar.gz
+initialize_variables "update_nginx"
+
 echo -e "\n\e[1;35m更新的版本是nginx-${version}，需要更新其他版本请自行修改代码\e[0m"
 echo -e "\n\e[1;35m不想安装请在五秒内终止脚本\e[0m\n"
 for i in {5..1}
@@ -2857,8 +2975,7 @@ echo -e "\n\e[1;35mmv /apps/nginx/sbin/nginx.bak /apps/nginx/sbin/nginx\e[0m"
 
 
 update_srunnginx(){
-local version=1.22.1
-local URL=http://nginx.org/download/nginx-${version}.tar.gz
+initialize_variables "update_srunnginx"
 echo -e "\n\e[1;35m更新的版本是nginx-${version}，centos7安装的4k测试没出现问题\e[0m"
 echo -e "\n\e[1;35m请提交准备好对应版本的压缩包放在root目录下，若没有请在五秒内终止脚本\e[0m\n"
 
@@ -3010,8 +3127,7 @@ echo -e "\n\e[1;35m升级后的版本\e[0m"
 
 
 update_srunnginx2(){
-local version=1.22.1
-local URL=http://nginx.org/download/nginx-${version}.tar.gz
+initialize_variables "update_srunnginx2"
 echo -e "\n\e[1;35m更新的版本是nginx-${version}，在centos6上测试的\e[0m"
 echo -e "\n\e[1;35m如果不想安装此版本请在五秒内终止脚本\e[0m"
 echo -e "\n\e[1;35m请提前准备好对应版本的压缩包放在root目录下，若没有请在五秒内终止脚本\e[0m\n"
@@ -3154,9 +3270,7 @@ echo -e "\n\e[1;35m升级后的版本\e[0m"
 
 
 update_openssl(){
-local OpensslVersion=1.1.1w
-local URL=https://www.openssl.org/source/old/1.1.1/openssl-1.1.1w.tar.gz
-local SystemVersion=`cat /etc/redhat-release|sed -r 's/.* ([0-9]+)\..*/\1/'`
+initialize_variables "update_openssl"
 echo -e "\e[1;35m====================================================================\e[0m"
 echo -e "\e[1;35m现在已安装的版本\e[0m"
 openssl version
@@ -3261,9 +3375,7 @@ openssl version
 
 update_openssh(){
 
-local ZlibVersion=1.3.1
-local OpensshVersion=9.7p1
-local SystemVersion=`cat /etc/redhat-release|sed -r 's/.* ([0-9]+)\..*/\1/'`
+initialize_variables "update_openssh"
 echo -e "\e[1;35m========================================================================\e[0m"
 echo -e "\e[1;35m已安装版本\e[0m"
 ssh -V
@@ -3453,11 +3565,8 @@ ssh -V
 #适用于从1.*版本升级到openssl1.1.1w,openssh9.7p1
 
 update_sshssl1(){
-local ZlibVersion=1.3.1
-local OpensshVersion=9.7p1
-local OpensslVersion=1.1.1w
-local OpensslVersion1=`openssl version | awk  '{print $2}'`
-local SystemVersion=`cat /etc/redhat-release|sed -r 's/.* ([0-9]+)\..*/\1/'`
+initialize_variables "update_sshssl1"
+log "Executing update_sshssl1"
 echo -e "\e[1;35m========================================================================\e[0m"
 echo -e "\e[1;35m现在已安装的版本\e[0m"
 openssl version
@@ -3743,13 +3852,8 @@ ssh -V
 
 #适用于从1.*版本升级到openssl3.3.0,openssh9.7p1
 update_sshssl2(){
-local OpensslVersion=3.3.0
-local OpensslVersion1=`openssl version | awk  '{print $2}'`
-local SystemVersion=`cat /etc/redhat-release|sed -r 's/.* ([0-9]+)\..*/\1/'`
-local ZlibVersion=1.3.1
-local OpensshVersion=9.7p1
-date=`date +%Y%m%d%H%M%S`
 
+initialize_variables "update_sshssl2"
 echo -e "\e[1;35m====================================================================\e[0m"
 echo -e "\e[1;35m现在已安装的版本\e[0m"
 openssl version
@@ -4098,13 +4202,7 @@ ssh -V
 #===================================================================================================================================================================
 #适用于从3.*版本升级到openssl3.3.1,openssh9.8p1
 update_sshssl3(){
-local OpensslVersion=3.3.1
-local OpensslVersion1=`openssl version | awk  '{print $2}'`
-local SystemVersion=`cat /etc/redhat-release|sed -r 's/.* ([0-9]+)\..*/\1/'`
-local ZlibVersion=1.3.1
-local OpensshVersion=9.8p1
-local URL=https://www.openssl.org/source/openssl-3.3.1.tar.gz
-date=`date +%Y%m%d%H%M%S`
+initialize_variables "update_sshssl3"
 
 echo -e "\e[1;35m========================================================================\e[0m"
 echo -e "\e[1;35m现在已安装的版本\e[0m"
@@ -4363,13 +4461,8 @@ ssh -V
 #适用于从1.*版本升级到openssl3.3.1,openssh9.8p1
 
 update_sshssl4(){
-local OpensslVersion=3.3.1
-local OpensslVersion1=`openssl version | awk  '{print $2}'`
-local SystemVersion=`cat /etc/redhat-release|sed -r 's/.* ([0-9]+)\..*/\1/'`
-local ZlibVersion=1.3.1
-local OpensshVersion=9.8p1
-date=`date +%Y%m%d%H%M%S`
 
+initialize_variables "update_sshssl4"
 echo -e "\e[1;35m====================================================================\e[0m"
 echo -e "\e[1;35m现在已安装的版本\e[0m"
 ssh -V
@@ -4730,13 +4823,8 @@ ssh -V
 #适用与centos6系统升级openssh9.8p1和openssl3.3.1
 
 update_sshssl5(){
-date=`date +%Y%m%d%H%M%S`
-local OpensslVersion=3.3.1
-local OpensshVersion=9.8p1
-local PerlVersion=5.36.0
-local OpensslVersion1=`openssl version | awk  '{print $2}'`
-local SystemVersion=`cat /etc/redhat-release|sed -r 's/.* ([0-9]+)\..*/\1/'`
 
+initialize_variables "update_sshssl5"
 
 echo -e "\e[1;35m====================================================================\e[0m"
 echo -e "\e[1;35m现在已安装的版本\e[0m"
@@ -7705,1900 +7793,7 @@ mail_alarm1() {
 
 
 
-install_kubernetes_ubuntu(){
-    while :;do
-    echo -e "\E[$[RANDOM%7+31];1m"
-    cat << EOF
 
-************************************************************
-************************************************************
-************************************************************
-**********                                        **********
-**********              安装kubernetes            **********
-**********              for  ubuntu               **********
-**********                                        **********
-**********             1.返回上一目录             **********
-**********                                        **********
-**********             2.1.25.0                   **********
-**********             3.1.22.7                   **********
-**********                                        **********
-**********             0.退出                     **********
-**********                                        **********
-************************************************************
-************************************************************
-************************************************************
-
-
-EOF
-
-    echo -e "\E[0m"
-read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
-
-case $Menu in
-
-1)     break
-       ;;
-
-2)     install_kubernetes_ubuntu_master
-       ;;
-
-3)     install_kubernetes_ubuntu_master1
-       ;;
-
-
-
-0)     set_et
-       ;;
-
-esac
-done
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-install_kubernetes_radhat(){
-    while :;do
-    echo -e "\E[$[RANDOM%7+31];1m"
-    cat << EOF
-
-************************************************************
-************************************************************
-************************************************************
-**********                                        **********
-**********              安装kubernetes            **********
-**********              for  radhat               **********
-**********                                        **********
-**********             1.返回上一目录             **********
-**********                                        **********
-**********             2.安装master01(1.27.4)     **********
-**********             3.安装node(1.27.4)         **********
-**********                                        **********
-**********             0.退出                     **********
-**********                                        **********
-************************************************************
-************************************************************
-************************************************************
-
-
-EOF
-
-    echo -e "\E[0m"
-read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
-
-case $Menu in
-
-1)     break
-       ;;
-
-2)     install_kubernetes_radhat_master
-       ;;
-
-3)     install_kubernetes_radhat_node
-       ;;
-
-0)     set_et
-       ;;
-
-esac
-done
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-install_kubernetes(){
-    while :;do
-    echo -e "\E[$[RANDOM%7+31];1m"
-    cat << EOF
-
-************************************************************
-************************************************************
-************************************************************
-**********                                        **********
-**********              安装kubernetes            **********
-**********                                        **********
-**********             1.返回上一目录             **********
-**********                                        **********
-**********             2.redhat                   **********
-**********             3.ubuntu                   **********
-**********             4.重置                     **********
-**********                                        **********
-**********             0.退出                     **********
-**********                                        **********
-************************************************************
-************************************************************
-************************************************************
-
-
-EOF
-
-    echo -e "\E[0m"
-read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
-
-case $Menu in
-
-1)     break
-       ;;
-
-2)     install_kubernetes_radhat
-       ;;
-
-3)     install_kubernetes_ubuntu
-       ;;
-
-4)     reset_kubenetes
-       ;;
-  
-
-0)     set_et
-       ;;
-
-esac
-done
-
-}
-
-
-ubuntu_docker(){
-${PURPLE} 占坑 $END
-}
-
-install_podman(){
-${PURPLE} 占坑 $END
-}
-
-
-
-
-
-install_lvs(){
-${PURPLE} lvs $END
-}
-
-install_tomcat(){
-${PURPLE} tomcat $END
-}
-
-install_haproxy(){
-${PURPLE} haproxy $END
-} 
-
-
-
-
-
-
-install_jenkins(){
-    ${PURPLE} 占坑 $END
-#    sudo yum install -y java-11-openjdk-devel
-#    wget https://mirrors.tuna.tsinghua.edu.cn/jenkins/redhat-stable/jenkins-2.452.2-1.1.noarch.rpm
-#    rpm -ivh jenkins-2.452.2-1.1.noarch.rpm
-#    systemctl enable --now  jenkins
-#    sudo firewall-cmd --permanent --zone=public --add-port=8080/tcp
-#    sudo firewall-cmd --reload
-#    sudo cat /var/lib/jenkins/secrets/initialAdminPassword
-#    sed -i.bak 's#updates.jenkins.io/download#mirrors.tuna.tsinghua.edu.cn/jenkins#g' ./data/updates/default.json  
-#    sed -i.bak 's#www.google.com#www.baidu.com#g' ./data/updates/default.json 
-#修改镜像源
-#vim /var/lib/jenkins/hudson.model.UpdateCenter.xml 
-#<?xml version='1.1' encoding='UTF-8'?>
-#<sites>
-#  <site>
-#    <id>default</id>
-#    <url>http://mirror.esuni.jp/jenkins/updates/update-center.json</url>
-#    https://jenkins-zh.gitee.io/update-center-mirror/tsinghua/update-
-#center.json
-#https://mirrors.tuna.tsinghua.edu.cn/jenkins/updates/update-center.json
-#  </site>
-#</sites>
-
-}
-
-install_halo(){
-${PURPLE} halo $END
-}
-
-install_lua(){
-${PURPLE} lua $END
-}
-
-install_gitlab(){
-${PURPLE} gitlab $END
-}
-
-install_git(){
-${PURPLE} git $END
-}
-
-install_wordpress(){
-${PURPLE} wordpress $END
-}
-
-install_apache(){
-${PURPLE} apache $END
-}
-
-install_jdk(){
-${PURPLE} jdk $END
-}
-
-install_php(){
-${PURPLE} php $END
-}
-
-install_phpadmin(){
-${PURPLE} phpadmin $END
-}
-
-install_memcached(){
-${PURPLE} memcached $END
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-install_zabbix(){
-while :;do
-    echo -e "\E[$[RANDOM%7+31];1m"
-    cat << EOF
-
-************************************************************
-************************************************************
-************************************************************
-**********                                        **********
-**********              安装zabbix                **********
-**********                                        **********
-********** 1.返回上一目录                         **********
-**********          ==================            **********
-********** zabbix6安装         zabbix6-agent2安装 **********
-**********                                        **********
-********** 2.rocky8安装        8.rocky8安装       **********
-********** 3.ubuntu2204安装    9.ubuntu2204安装   **********
-********** 4.centos7安装       10.centos7安装     **********
-**********          ==================            **********
-********** zabbix5安装         zabbix5-agent2安装 **********
-**********                                        **********
-********** 5.rocky8安装        11.rocky8安装      **********
-********** 6.ubuntu2204安装    12.ubuntu2204安装  **********
-********** 7.centos7安装       13.centos7安装     **********
-**********          ==================            **********
-********** 0.退出                                 **********
-**********                                        **********
-************************************************************
-************************************************************
-************************************************************
-
-
-EOF
-
-    echo -e "\E[0m"
-read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
-
-case $Menu in
-
-1)     break
-       ;;
-
-2)     install_rocky8_zabbix6
-       ;;
-
-3)     install_ubuntu2204_zabbix6
-       ;;
-
-4)     install_centos7_zabbix6
-       ;;
-
-
-5)     install_rocky8_zabbix5
-       ;;
-
-6)     install_ubuntu2204_zabbix5
-       ;;
-
-7)     install_centos7_zabbix5
-       ;;
-
-
-8)     install_rocky8_zabbix6_agent2
-       ;;
-
-9)     install_ubuntu2204_zabbix6_agent2
-       ;;
-
-10)    install_centos7_zabbix6_agent2
-       ;;
-
-
-11)    install_rocky8_zabbix5_agent2
-       ;;
-
-12)    install_ubuntu2204_zabbix5_agent2
-       ;;
-
-13)    install_centos7_zabbix5_agent2
-       ;;
-
-
-
-0)     set_et
-       ;;
-
-esac
-done
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-install_keepalived(){
-while :;do
-    echo -e "\E[$[RANDOM%7+31];1m"
-    cat << EOF
-
-************************************************************
-************************************************************
-************************************************************
-**********                                        **********
-**********              安装keepalived            **********
-**********                                        **********
-**********             1.返回上一目录             **********
-**********                                        **********
-**********             2.编译安装                 **********
-**********                                        **********
-**********             0.退出                     **********
-**********                                        **********
-************************************************************
-************************************************************
-************************************************************
-
-
-EOF
-
-    echo -e "\E[0m"
-read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
-
-case $Menu in
-
-1)     break
-       ;;
-
-2)     compile_install_keepalived
-       ;;
-
-0)     set_et
-       ;;
-
-esac
-done
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-install_redis(){
-while :;do
-    echo -e "\E[$[RANDOM%7+31];1m"
-    cat << EOF
-
-************************************************************
-************************************************************
-************************************************************
-**********                                        **********
-**********              安装Redis                 **********
-**********                                        **********
-**********             1.返回上一目录             **********
-**********                                        **********
-**********             2.编译安装                 **********
-**********                                        **********
-**********             0.退出                     **********
-**********                                        **********
-************************************************************
-************************************************************
-************************************************************
-
-
-EOF
-
-    echo -e "\E[0m"
-read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
-
-case $Menu in
-
-1)     break
-       ;;
-
-2)     compile_install_redis
-       ;;
-
-0)     set_et
-       ;;
-
-esac
-done
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-install_clickhouse(){
-while :;do
-    echo -e "\E[$[RANDOM%7+31];1m"
-    cat << EOF
-
-========================================================
-RedHat系列是直接yum下载安装
-Debian系列是直接apt下载安装
-包安装是自动下载官网tgz包再安装
-========================================================
-
-************************************************************
-************************************************************
-************************************************************
-**********                                        **********
-**********              安装clickhouse            **********
-**********                                        **********
-**********             1.返回上一目录             **********
-**********                                        **********
-**********             2.RedHat系列               **********
-**********             3.Debian系列               **********
-**********             4.包安装                   **********
-**********             5.源码编译                 **********
-**********                                        **********
-**********             0.退出                     **********
-**********                                        **********
-************************************************************
-************************************************************
-************************************************************
-
-
-EOF
-
-    echo -e "\E[0m"
-read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
-
-case $Menu in
-
-1)     break
-       ;;
-
-2)     redhat_install_clickhouse
-       ;;
-
-3)     debian_install_clickhouse
-       ;;
-
-4)     tgz_install_clickhouse
-       ;;
-
-5)     compile_install_clickhouse
-       ;;     
-
-0)     set_et
-       ;;
-
-esac
-done
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-install_docker(){
-while :;do
-    echo -e "\E[$[RANDOM%7+31];1m"
-    cat << EOF
-
-========================================================
-CentOS7yum源安装，选项3弃用
-Ubuntu安装还没写
-安装podman还没写
-二进制安装可在线可离线
-========================================================
-
-************************************************************
-************************************************************
-************************************************************
-**********                                        ********** 
-**********           安装docker                   **********    
-**********                                        **********
-**********        1.返回上一目录                  **********
-**********                                        **********
-**********        2.CentOS7yum源安装              **********
-**********        3.CentOS7yum源安装              **********
-**********        4.CentOS8yum源版本              **********
-**********        5.Ubuntu安装                    **********
-**********        6.二进制安装                    **********
-**********        7.安装podman                    **********
-**********        8.安装docker-compose            **********
-**********        9.卸载docker                    **********
-**********                                        **********
-**********        0.退出                          ********** 
-**********                                        **********
-************************************************************
-************************************************************
-************************************************************
-
-
-EOF
-
-    echo -e "\E[0m"
-read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
-
-case $Menu in
-
-1)     break
-       ;;
-
-2)     c7_yum_docker
-       ;;
-
-3)     c7_yum2_docker
-       ;;
-
-4)     c8_yum_docker
-       ;;
-
-5)     ubuntu_docker
-       ;;
-
-6)     offline_install_docker
-       ;;
-
-7)     install_podman
-       ;;
-
-8)     install_docker_compose
-       ;;
-
-9)     uninstall_docker
-       ;;
-
-0)     set_et
-       ;;
-
-esac
-done
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-reset_PS1(){
-while :;do
-    echo -e  "\E[$[RANDOM%7+31];1m"
-    cat << EOF
-
-
-************************************************************
-************************************************************
-************************************************************
-**********                                        **********
-**********           修改主机名颜色               ********** 
-**********                                        **********
-**********     1.返回上一目录                     **********
-**********                                        **********
-**********     2.Redhat7以上或Ubuntu              **********
-**********     3.Redhat6                          **********
-**********                                        **********
-**********     0.退出                             **********
-**********                                        **********
-************************************************************
-************************************************************
-************************************************************
-
-
-EOF
-        echo -e "\E[0m"
-
-read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
-case $Menu in
-2)      set_PS1
-        ;;
-
-3)      set_c6_PS1
-        ;;
-
-1)      break
-        ;;
-
-0)      set_et
-        ;;
-
-esac
-done
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-set_net(){
-while :;do
-    echo -e  "\E[$[RANDOM%7+31];1m"
-    cat << EOF
-
-
-************************************************************
-************************************************************
-************************************************************
-**********                                        **********
-**********            网卡配置                    ********** 
-**********                                        **********
-**********     1.返回上一目录                     **********
-**********                                        **********
-**********     2.配置Redhat7以上系列网卡文件      **********
-**********     3.配置Redhat6版本网卡文件          **********
-**********     4.配置Ubuntu网卡文件               **********
-**********     ============================       ********** 
-**********     5.Redhat系列修改网卡名为eth0       **********
-**********     6.Ubuntu修改网卡名为eth0           **********
-**********                                        **********
-**********     0.退出                             **********
-**********                                        **********
-************************************************************
-************************************************************
-************************************************************
-
-
-EOF
-        echo -e "\E[0m"
-
-read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
-case $Menu in
-2)      configure_redhat_IP_address
-        ;;
-
-3)      configure_redhat6_IP_address
-        ;;
-
-4)      configure_ubuntu_IP_address
-        ;;
-
-5)      set_redhat_netname
-        ;;
-
-6)      set_ubuntu_netname
-        ;;
-
-1)      break
-        ;;
-
-0)      set_et
-        ;;
-
-esac
-done
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-ubuntu_source(){
-while :;do
-    echo -e  "\E[$[RANDOM%7+31];1m"
-    cat << EOF
-
-
-************************************************************
-************************************************************
-************************************************************
-**********                                        **********
-**********        ubuntu源配置                    ********** 
-**********                                        **********
-**********     1.返回上一目录                     **********
-**********                                        **********
-**********     2.阿里云源                         **********
-**********     3.清华大学源                       **********
-**********     4.中科大源                         **********
-**********     5.ubuntu2004阿里源                 **********
-**********     6.ubuntu1804阿里源                 **********
-**********     7.ubuntu1604阿里源                 **********
-**********                                        **********
-**********     0.退出                             **********
-**********                                        **********
-************************************************************
-************************************************************
-************************************************************
-
-
-EOF
-        echo -e "\E[0m"
-
-read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
-case $Menu in
-2)      ubuntu_aliyun_source
-        ;;
-
-3)      ubuntu_tuna_source
-        ;;
-
-4)      ubuntu_ustc_source
-        ;;
-
-5)      ubuntu2004_aliyun_source
-        ;;
-
-6)      ubuntu1804_aliyun_source
-        ;;
-
-7)      ubuntu1604_aliyun_source
-        ;;
-
-1)      break
-        ;;
-
-0)      set_et
-        ;;
-
-esac
-done
-
-}
-
-
-
-
-
-set_centos7_yum(){
-    while :;do
-    echo -e  "\E[$[RANDOM%7+31];1m"
-    cat << EOF
-
-============================================================
-适用于centos7.9.2009和redhat7.9
-============================================================
-
-************************************************************
-************************************************************
-************************************************************
-**********                                        **********
-**********           centos7                      **********
-**********                                        **********
-**********         1.返回上一目录                 **********
-**********                                        ********** 
-**********         2.配置EPEL源                   **********
-**********         3.配置阿里源                   **********
-**********         4.配置清华源                   **********
-**********         5.配置网易源                   **********
-**********         6.配置华为源                   **********
-**********         7.配置南京大学源               **********
-**********         8.配置所有源(无挂载磁盘)       **********
-**********         9.配置所有源(有挂载磁盘)       **********
-**********                                        **********
-**********         0.退出                         **********
-**********                                        **********
-************************************************************
-************************************************************
-************************************************************
-
-
-EOF
-        echo -e "\E[0m"
-
-read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
-case $Menu in
-2)      set_epel
-        ;;
-
-3)      set_ali
-        ;;
-
-4)      set_qinghua
-        ;;
-
-5)      set_wangyi
-        ;;
-
-6)      set_huawei
-        ;;
-
-7)      set_nanjing
-        ;;
-
-8)      set_yum3_centos7
-        ;;
-
-9)      set_yum2_centos7
-        ;;
-
-
-1)      break
-        ;;
-
-0)      set_et
-        ;;
-
-esac
-done
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-set_yum(){
-while :;do
-    echo -e  "\E[$[RANDOM%7+31];1m"
-    cat << EOF
-============================================================
-Rocky8.7建议用3选项
-2选项是没有挂载光盘
-3选项是附带挂载光盘
-============================================================
-
-************************************************************
-************************************************************
-************************************************************
-**********                                        **********
-**********             配置yum源                  **********
-**********                                        **********
-**********         1.返回上一目录                 **********
-**********                                        ********** 
-**********         2.配置Rocky8 yum源             **********
-**********         3.配置Rocky8 yum源             **********
-**********         4.配置Rocky8 EPEL源            **********
-**********         =======================        **********
-**********         5.配置centos7 源               **********
-**********         =======================        **********
-**********         6.配置centos6.10 yum源         **********
-**********         7.配置centos6 EPEL源           **********
-**********         8.配置centos6.5 yum源          **********
-**********         9.配置centos6.6 yum源          **********
-**********         =======================        **********
-**********         10.配置ubuntu apt源            **********
-**********                                        **********
-**********         0.退出                         **********
-**********                                        **********
-************************************************************
-************************************************************
-************************************************************
-
-
-EOF
-        echo -e "\E[0m"
-
-read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
-case $Menu in
-2)      set_yum2_rocky8
-        ;;
-
-3)      set_yum_rocky8
-        ;;
-
-4)      set_epel_rocky8
-        ;;
-
-5)      set_centos7_yum
-        ;;
-
-6)      set_yum_centos610
-        ;;
-
-7)      set_epel_centos6
-        ;;
-
-8)      set_yum_centos65
-        ;;
-
-9)      set_yum_centos66
-        ;;
-
-10)     ubuntu_source
-        ;;
-
-
-1)      break
-        ;;
-
-0)      set_et
-        ;;
-
-esac
-done
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-set_firewalld(){
-while :;do
-    echo -e "\E[$[RANDOM%7+31];1m"
-    cat << EOF
-
-
-************************************************************
-************************************************************
-************************************************************
-**********                                        ********** 
-**********             关闭防火墙                 **********    
-**********                                        **********
-**********           1.返回上一目录               **********
-**********                                        **********
-**********           2.Redhat7以上版本            **********
-**********           3.Redhat6版本                **********
-**********                                        **********
-**********           0.退出                       ********** 
-**********                                        **********
-************************************************************
-************************************************************
-************************************************************
-
-
-EOF
-
-    echo -e "\E[0m"
-read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
-
-case $Menu in
-
-1)     break
-       ;;
-
-2)     disable_firewalld
-       ;;
-
-3)     stop_centos6_firewalld
-       ;;
-
-0)     set_et
-       ;;
-
-esac
-done
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-software(){
-while :;do
-    echo -e "\E[$[RANDOM%7+31];1m"
-    cat << EOF
-========================================
-Ubuntu和redhat安装的软件多少不一样
-========================================
-
-************************************************************
-************************************************************
-************************************************************
-**********                                        ********** 
-**********           安装初始化软件               **********    
-**********                                        **********
-**********           1.返回上一目录               **********
-**********                                        **********
-**********           2.Redhat7,8系列              **********
-**********           3.Redhat6系列                **********
-**********           4.Ubuntu系列                 **********
-**********                                        **********
-**********           0.退出                       ********** 
-**********                                        **********
-************************************************************
-************************************************************
-************************************************************
-
-
-EOF
-
-    echo -e "\E[0m"
-read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
-
-case $Menu in
-
-1)     break
-       ;;
-
-2)     c7_software
-       ;;
-
-3)     c6_software
-       ;;
-
-4)     Ubuntu_software
-       ;;
-
-0)     set_et
-       ;;
-
-esac
-done
-
-
-
-
-}
-
-time1(){
-clock -s
-}
-
-time2(){
-clock -w
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-set_all(){
-while :;do
-	echo -e  "\E[$[RANDOM%7+31];1m"
-	cat << EOF
-
-
-************************************************************
-************************************************************
-************************************************************
-**********                                        ********** 
-**********              系统设置                  ********** 
-**********                                        **********
-**********  1.返回上一目录                        **********
-**********                                        **********
-**********  2.关闭防火墙         3.关闭SELINUX    **********
-**********  4.安装初始化软件     5.配置yum,apt源  **********
-**********         ====================           **********
-**********  6.网卡配置           7.修改别名       **********
-**********  8.修改主机名颜色     9.修改主机名     **********
-**********         ====================           **********
-**********  10.设置vim           11.设置时区      **********
-**********  12.设置登录显示      13.矫正软件时间  **********
-**********         ====================           **********
-**********  14.矫正硬件时间      15.垃圾桶        **********
-**********  16.设置邮箱          17.优化ulimit    **********
-**********         ====================           **********
-**********  18.禁用swap          19.启用swap      **********
-**********  20.修改ssh端口号     21.ubuntu远程登录**********
-*********         ====================            **********
-**********  22.sshpass验证       23.ssh登录显示   **********
-**********  24.邮箱告警                           **********
-**********                                        **********
-**********  0.退出                                **********
-************************************************************       
-************************************************************
-************************************************************
-EOF
-	echo -e "\E[0m"
-
-read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu 
-case $Menu in
-
-
-2)	set_firewalld
-	;;
-
-3)	disable_selinux
-	;;
-
-4)      software
-        ;;
-
-5)      set_yum
-        ;;
-
-6)	set_net
-	;;
-
-7)	set_alias
-	;;
-
-8)	reset_PS1
-	;;
-
-9)	set_hostname
-	;;
-
-10)     set_vim
-        ;;
-
-11)     set_timezone
-        ;;
-
-12)     set_motd1
-        ;;
-
-13)     time1
-        ;;
-
-14)     time2
-        ;;
-
-15)     set_rm
-        ;;
-
-16)     set_mail
-        ;;
-
-17)     set_ulimit
-        ;;
-
-18)     stop_swap
-        ;;
-
-19)     start_swap
-        ;;
-
-20)     set_ssh
-        ;;
-
-21)     ubuntu_root_login
-        ;;
-
-22)     sshpass_key
-        ;;
-
-23)     ssh_auth
-        ;;
-
-24)     mail_alarm
-        ;;
-
-1)      break
-        ;;
-
-0)	set_et
-	;;
-
-esac
-done
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-rpm_install_mysql(){
-while :;do
-    echo -e "\E[$[RANDOM%7+31];1m"
-    cat << EOF
-
-
-
-************************************************************
-************************************************************
-************************************************************
-**********                                        ********** 
-**********           安装MySQL社区版              **********    
-**********                                        **********
-**********           1.返回上一目录               **********
-**********                                        **********
-**********           2.MySQL5.7                   **********
-**********           3.MySQL8.0                   **********
-**********                                        **********
-**********           0.退出                       ********** 
-**********                                        **********
-************************************************************
-************************************************************
-************************************************************
-
-
-EOF
-
-echo -e "\E[0m"
-read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
-
-case $Menu in
-
-1)     break
-       ;;
-
-2)     rpm_install_mysql57
-       ;;
-
-3)     rpm_install_mysql8
-       ;;
-
-
-0)     set_et
-       ;;
-
-esac
-done
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-install_Database(){
-while :;do
-    echo -e "\E[$[RANDOM%7+31];1m"
-    cat << EOF
-
-
-
-************************************************************
-************************************************************
-************************************************************
-**********                                        ********** 
-**********             安装数据库                 **********    
-**********                                        **********
-**********           1.返回上一目录               **********
-**********                                        **********
-**********           2.二进制安装MySQL            **********
-**********           3.yum源安装MySQL             **********
-**********           4.二进制安装MariaDB          **********
-**********           5.yum源安装MariaDB           **********
-**********                                        **********
-**********           0.退出                       ********** 
-**********                                        **********
-************************************************************
-************************************************************
-************************************************************
-
-
-EOF
-
-echo -e "\E[0m"
-read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
-
-case $Menu in
-
-1)     break
-       ;;
-
-2)      install_mysql
-        ;;
-
-3)      rpm_install_mysql
-        ;;
-
-4)      install_mariadb
-        ;;
-
-5)      yum_mariadb
-        ;;
-
-0)     set_et
-       ;;
-
-esac
-done
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-install_NGINX(){
-while :;do
-    echo -e "\E[$[RANDOM%7+31];1m"
-    cat << EOF
-
-
-
-************************************************************
-************************************************************
-************************************************************
-**********                                        ********** 
-**********             安装NGINX                  **********    
-**********                                        **********
-**********           1.返回上一目录               **********
-**********                                        **********
-**********           2.编译安装Nginx              **********
-**********           3.升级Nginx                  **********
-**********           4.升级srun-Nginx             **********
-**********           5.升级旧版本srun-Nginx       **********
-**********                                        **********
-**********           0.退出                       ********** 
-**********                                        **********
-************************************************************
-************************************************************
-************************************************************
-
-
-EOF
-
-echo -e "\E[0m"
-read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
-
-case $Menu in
-
-1)     break
-       ;;
-
-
-2)      install_nginx1
-        ;;
-
-3)      update_nginx
-        ;;
-
-4)      update_srunnginx
-        ;;
-
-5)      update_srunnginx2
-        ;;
-
-0)     set_et
-       ;;
-
-esac
-done
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-install_SSHSSL(){
-while :;do
-    echo -e "\E[$[RANDOM%7+31];1m"
-    cat << EOF
-
-============================================================
-**********以下支持在centos7系列使用*************
-2.升级openssl到1.1.1w版本
-3.升级openssh到9.7p1版本
-4 适用于从openssl1.*版本升级到openssl1.1.1w,openssh9.7p1
-5 适用于从openssl1.*版本升级到openssl3.3.0,openssh9.7p1
-6.适用于从openssl3.*版本升级到openssl3.3.1,openssh9.8p1
-7.适用于从openssl1.*版本升级到openssl3.3.1,openssh9.8p1
-**********以下支持在centos6系列使用*************
-8.适用于从openssl1.*版本升级到openssl3.3.1,openssh9.8p1
-============================================================
-
-************************************************************
-************************************************************
-************************************************************
-**********                                        ********** 
-**********          升级安装openssl,openssh       **********    
-**********                                        **********
-**********           1.返回上一目录               **********
-**********                                        **********
-**********           2.安装telnet                 **********
-**********           3.升级安装openssl            **********
-**********           4.升级安装openssh            **********
-**********           5.升级openssl,openssh        **********
-**********           6.升级openssl,openssh        **********
-**********           7.升级openssl,openssh        **********
-**********           8.升级openssl,openssh        **********
-**********           9.升级openssl,openssh        **********
-**********                                        **********
-**********           0.退出                       ********** 
-**********                                        **********
-************************************************************
-************************************************************
-************************************************************
-
-
-EOF
-
-echo -e "\E[0m"
-read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
-
-case $Menu in
-
-1)     break
-       ;;
-
-2)      install_telnet
-        ;;
-
-3)      update_openssl
-        ;;
-
-4)     update_openssh
-        ;;
-
-5)     update_sshssl1
-        ;;
-
-6)     update_sshssl2
-        ;;
-
-7)     update_sshssl3
-        ;;
-
-8)     update_sshssl4
-        ;;
-
-9)     update_sshssl5
-        ;;
-
-0)     set_et
-       ;;
-
-esac
-done
-}
-
-
-
-
-install_prometheus(){
-while :;do
-    echo -e "\E[$[RANDOM%7+31];1m"
-    cat << EOF
-
-
-
-
-************************************************************
-************************************************************
-************************************************************
-**********                                        ********** 
-**********            安装prometheus              **********    
-**********                                        **********
-**********           1.返回上一目录               **********
-**********                                        **********
-**********           2.                          **********
-**********                                        **********
-**********           0.退出                       ********** 
-**********                                        **********
-************************************************************
-************************************************************
-************************************************************
-
-
-EOF
-
-echo -e "\E[0m"
-read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
-
-case $Menu in
-
-1)     break
-       ;;
-
-2)     install_prometheus1
-        ;;
-
-0)     set_et
-       ;;
-
-esac
-done
-}
-
-
-
-
-
-
-
-
-install_service(){
-	while :;do
-	echo -e "\E[$[RANDOM%7+31];1m"
-	cat << EOF
-
-
-************************************************************
-************************************************************
-************************************************************
-************************************************************
-**********                                        **********
-**********              安装服务                  **********
-**********                                        **********
-**********           1.返回上一目录               **********
-**********                                        **********
-**********           2.安装Database               **********
-**********           3.安装Nginx                  **********
-**********           4.升级安装openssl,openssh    **********
-**********           5.安装docker                 **********
-**********           6.安装clickhouse             **********
-**********           7.安装Redis                  **********
-**********           8.安装keepalived             **********
-**********           9.安装jumpserver             **********
-**********           10.安装zabbix                **********
-**********           11.安装DNS                   **********
-**********           12.安装kubernetes            **********
-**********           13.安装prometheus            **********
-**********           14.安装telnet                **********
-**********                                        **********
-**********           0.退出                       **********
-**********                                        **********
-************************************************************
-************************************************************
-************************************************************
-
-
-EOF
-	echo -e "\E[0m"
-
-
-
-read -p "$(echo -e '\e[1;36m请输入序号:  \e[0m')" Menu
-
-case $Menu in
-
-2)      install_Database
-	    ;;
-
-3)      install_NGINX
-        ;;
-
-4)     install_SSHSSL
-        ;;
-
-5)     install_docker
-        ;;
-
-6)     install_clickhouse
-        ;;
-
-7)     install_redis
-        ;;
-
-8)     install_keepalived
-        ;;
-
-9)     install_jumpserver
-        ;;
-
-10)     install_zabbix
-        ;;
-
-11)     install_dns
-        ;;
-
-12)     install_kubernetes
-        ;;
-
-13)     install_prometheus
-        ;;
-
-14)     install_telnet
-        ;;
-
-39)     install_haproxy
-        ;;
-
-40)     install_jenkins
-        ;;
-
-41)     install_halo
-        ;;
-
-42)     install_lua
-        ;;
-
-43)     install_gitlab
-        ;;
-
-44)     install_git
-        ;;
-
-45)     install_wordpress
-        ;;
-
-46)     install_apache
-        ;;
-
-47)     install_jdk
-        ;;
-
-48)     install_php
-        ;;
-
-49)     install_phpadmin
-        ;;
-
-50)     install_memcached
-        ;;
-
-1)      break
-        ;;
-
-0)	set_et
-	;;
-
-esac
-done
-
-}
 
 
 update_log(){
@@ -9643,7 +7838,7 @@ echo -e "\e[1;$[RANDOM%7+31]m===================================================
                  echo "2024-7-09 version:v4.7.09"
                  echo "添加邮箱告警功能,ssh登录显示功能"
 echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
-                 echo "2024-7-23 version:$CshVersion"
+                 echo "2024-7-23 version:v4.7.23"
                  echo "增加升级openssl openssl更多版本"
 
 }
@@ -9847,9 +8042,103 @@ init 6
 
 
 
+install_jenkins(){
+    ${PURPLE} 占坑 $END
+#    sudo yum install -y java-11-openjdk-devel
+#    wget https://mirrors.tuna.tsinghua.edu.cn/jenkins/redhat-stable/jenkins-2.452.2-1.1.noarch.rpm
+#    rpm -ivh jenkins-2.452.2-1.1.noarch.rpm
+#    systemctl enable --now  jenkins
+#    sudo firewall-cmd --permanent --zone=public --add-port=8080/tcp
+#    sudo firewall-cmd --reload
+#    sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+#    sed -i.bak 's#updates.jenkins.io/download#mirrors.tuna.tsinghua.edu.cn/jenkins#g' ./data/updates/default.json  
+#    sed -i.bak 's#www.google.com#www.baidu.com#g' ./data/updates/default.json 
+#修改镜像源
+#vim /var/lib/jenkins/hudson.model.UpdateCenter.xml 
+#<?xml version='1.1' encoding='UTF-8'?>
+#<sites>
+#  <site>
+#    <id>default</id>
+#    <url>http://mirror.esuni.jp/jenkins/updates/update-center.json</url>
+#    https://jenkins-zh.gitee.io/update-center-mirror/tsinghua/update-
+#center.json
+#https://mirrors.tuna.tsinghua.edu.cn/jenkins/updates/update-center.json
+#  </site>
+#</sites>
+
+}
+
+
+ubuntu_docker(){
+${PURPLE} 占坑 $END
+}
+
+install_podman(){
+${PURPLE} 占坑 $END
+}
 
 
 
+
+
+install_lvs(){
+${PURPLE} lvs $END
+}
+
+install_tomcat(){
+${PURPLE} tomcat $END
+}
+
+install_haproxy(){
+${PURPLE} haproxy $END
+} 
+
+
+
+
+
+
+
+
+install_halo(){
+${PURPLE} halo $END
+}
+
+install_lua(){
+${PURPLE} lua $END
+}
+
+install_gitlab(){
+${PURPLE} gitlab $END
+}
+
+install_git(){
+${PURPLE} git $END
+}
+
+install_wordpress(){
+${PURPLE} wordpress $END
+}
+
+install_apache(){
+${PURPLE} apache $END
+}
+
+install_jdk(){
+${PURPLE} jdk $END
+}
+
+install_php(){
+${PURPLE} php $END
+}
+
+install_phpadmin(){
+${PURPLE} phpadmin $END
+}
+
+install_memcached(){
+${PURPLE} memcached $END
+}
 
 
 
@@ -9858,61 +8147,1870 @@ one_step(){
     while :;do
 echo -e "\n\e[1;$[RANDOM%7+31]m ^_^~~~^_^centos7一键初始化 ^_^~~~^_^\e[0m"
 echo -e "\n\e[1;31m暂时弃用\e[0m"
-echo -e "\n\e[1;$[RANDOM%7+31]m1.关闭防火墙\e[0m"
-
-echo -e "\n\e[1;$[RANDOM%7+31]m2.selinux\e[0m"
-
-echo -e "\n\e[1;$[RANDOM%7+31]m3.优化limit\e[0m"
- 
-echo -e "\n\e[1;$[RANDOM%7+31]m4.修改centos7-yum源\e[0m"
-
-echo -e "\n\e[1;$[RANDOM%7+31]m5.软件安装\e[0m"
-
-echo -e "\n\e[1;$[RANDOM%7+31]m6.添加vim开头显示\e[0m"
-
-echo -e "\n\e[1;$[RANDOM%7+31]m7.修改登录显示\e[0m"
-
-echo -e "\n\e[1;$[RANDOM%7+31]m8.修改网卡名\e[0m"
-
-echo -e "\n\e[1;$[RANDOM%7+31]m9.添加别名\e[0m"
-
-echo -e "\n\e[1;$[RANDOM%7+31]m10.修改主机名颜色\e[0m"
-
-echo -e "\n\e[1;$[RANDOM%7+31]m11.网卡配置\e[0m"
-
-echo -e "\n\e[1;$[RANDOM%7+31]m0.退出\e[0m\n"
-
+echo -e "\n\e[1;32m1.返回上一目录\e[0m"
+echo -e "\n\e[1;35m2.关闭防火墙\e[0m"
+echo -e "\n\e[1;35m3.selinux\e[0m"
+echo -e "\n\e[1;35m4.优化limit\e[0m"
+echo -e "\n\e[1;35m5.修改centos7-yum源\e[0m"
+echo -e "\n\e[1;35m6.软件安装\e[0m"
+echo -e "\n\e[1;35m7.添加vim开头显示\e[0m"
+echo -e "\n\e[1;35m8.修改登录显示\e[0m"
+echo -e "\n\e[1;35m9.修改网卡名\e[0m"
+echo -e "\n\e[1;35m10.添加别名\e[0m"
+echo -e "\n\e[1;35m11.修改主机名颜色\e[0m"
+echo -e "\n\e[1;35m12.网卡配置\e[0m"
+echo -e "\n\e[1;31m0.退出\e[0m\n"
 read -p "$(echo -e '\e[1;35m输入序号: \e[0m')" OOOO
 
 case $OOOO in
 
-1)    disable_firewalld
+1)    set_back
       ;;
-2)    disable_selinux
+2)    disable_firewalld
       ;;
-3)    set_ulimit
+3)    disable_selinux
       ;;
-4)    set_yum2_centos7
+4)    set_ulimit
       ;;
-5)    c7_software
+5)    set_yum2_centos7
       ;;
-6)    set_vim
+6)    c7_software
       ;;
-7)    set_motd
+7)    set_vim
       ;;
-8)    set_redhat_netname
+8)    set_motd
       ;;
-9)    set_alias
+9)    set_redhat_netname
       ;;
-10)   set_PS1
+10)    set_alias
       ;;
-11)   configure_redhat_IP_address
+11)   set_PS1
+      ;;
+12)   configure_redhat_IP_address
       ;;
 0)    set_et
       ;;
 
 esac
 done
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+install_kubernetes_ubuntu(){
+    while :;do
+    echo -e "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        **********
+**********              安装kubernetes            **********
+**********              for  ubuntu               **********
+**********                                        **********
+**********             1.返回上一目录             **********
+**********                                        **********
+**********             2.1.25.0                   **********
+**********             3.1.22.7                   **********
+**********                                        **********
+**********             0.退出                     **********
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+
+    echo -e "\E[0m"
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+
+case $Menu in
+
+1)     set_back
+       ;;
+
+2)     install_kubernetes_ubuntu_master
+       ;;
+
+3)     install_kubernetes_ubuntu_master1
+       ;;
+
+
+
+0)     set_et
+       ;;
+
+esac
+done
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+install_kubernetes_radhat(){
+    while :;do
+    echo -e "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        **********
+**********              安装kubernetes            **********
+**********              for  radhat               **********
+**********                                        **********
+**********             1.返回上一目录             **********
+**********                                        **********
+**********             2.安装master01(1.27.4)     **********
+**********             3.安装node(1.27.4)         **********
+**********                                        **********
+**********             0.退出                     **********
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+
+    echo -e "\E[0m"
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+
+case $Menu in
+
+1)     set_back
+       ;;
+
+2)     install_kubernetes_radhat_master
+       ;;
+
+3)     install_kubernetes_radhat_node
+       ;;
+
+0)     set_et
+       ;;
+
+esac
+done
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+install_kubernetes(){
+    while :;do
+    echo -e "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        **********
+**********              安装kubernetes            **********
+**********                                        **********
+**********             1.返回上一目录             **********
+**********                                        **********
+**********             2.redhat                   **********
+**********             3.ubuntu                   **********
+**********             4.重置                     **********
+**********                                        **********
+**********             0.退出                     **********
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+
+    echo -e "\E[0m"
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+
+case $Menu in
+
+1)     set_back
+       ;;
+
+2)     install_kubernetes_radhat
+       ;;
+
+3)     install_kubernetes_ubuntu
+       ;;
+
+4)     reset_kubenetes
+       ;;
+  
+
+0)     set_et
+       ;;
+
+esac
+done
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+install_zabbix(){
+while :;do
+    echo -e "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        **********
+**********              安装zabbix                **********
+**********                                        **********
+********** 1.返回上一目录                         **********
+**********          ==================            **********
+********** zabbix6安装         zabbix6-agent2安装 **********
+**********                                        **********
+********** 2.rocky8安装        8.rocky8安装       **********
+********** 3.ubuntu2204安装    9.ubuntu2204安装   **********
+********** 4.centos7安装       10.centos7安装     **********
+**********          ==================            **********
+********** zabbix5安装         zabbix5-agent2安装 **********
+**********                                        **********
+********** 5.rocky8安装        11.rocky8安装      **********
+********** 6.ubuntu2204安装    12.ubuntu2204安装  **********
+********** 7.centos7安装       13.centos7安装     **********
+**********          ==================            **********
+********** 0.退出                                 **********
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+
+    echo -e "\E[0m"
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+
+case $Menu in
+
+1)     set_back
+       ;;
+
+2)     install_rocky8_zabbix6
+       ;;
+
+3)     install_ubuntu2204_zabbix6
+       ;;
+
+4)     install_centos7_zabbix6
+       ;;
+
+
+5)     install_rocky8_zabbix5
+       ;;
+
+6)     install_ubuntu2204_zabbix5
+       ;;
+
+7)     install_centos7_zabbix5
+       ;;
+
+
+8)     install_rocky8_zabbix6_agent2
+       ;;
+
+9)     install_ubuntu2204_zabbix6_agent2
+       ;;
+
+10)    install_centos7_zabbix6_agent2
+       ;;
+
+
+11)    install_rocky8_zabbix5_agent2
+       ;;
+
+12)    install_ubuntu2204_zabbix5_agent2
+       ;;
+
+13)    install_centos7_zabbix5_agent2
+       ;;
+
+
+
+0)     set_et
+       ;;
+
+esac
+done
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+install_keepalived(){
+while :;do
+    echo -e "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        **********
+**********              安装keepalived            **********
+**********                                        **********
+**********             1.返回上一目录             **********
+**********                                        **********
+**********             2.编译安装                 **********
+**********                                        **********
+**********             0.退出                     **********
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+
+    echo -e "\E[0m"
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+
+case $Menu in
+
+1)     set_back
+       ;;
+
+2)     compile_install_keepalived
+       ;;
+
+0)     set_et
+       ;;
+
+esac
+done
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+install_redis(){
+while :;do
+    echo -e "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        **********
+**********              安装Redis                 **********
+**********                                        **********
+**********             1.返回上一目录             **********
+**********                                        **********
+**********             2.编译安装                 **********
+**********                                        **********
+**********             0.退出                     **********
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+
+    echo -e "\E[0m"
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+
+case $Menu in
+
+1)     set_back
+       ;;
+
+2)     compile_install_redis
+       ;;
+
+0)     set_et
+       ;;
+
+esac
+done
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+install_clickhouse(){
+while :;do
+    echo -e "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+========================================================
+RedHat系列是直接yum下载安装
+Debian系列是直接apt下载安装
+包安装是自动下载官网tgz包再安装
+========================================================
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        **********
+**********              安装clickhouse            **********
+**********                                        **********
+**********             1.返回上一目录             **********
+**********                                        **********
+**********             2.RedHat系列               **********
+**********             3.Debian系列               **********
+**********             4.包安装                   **********
+**********             5.源码编译                 **********
+**********                                        **********
+**********             0.退出                     **********
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+
+    echo -e "\E[0m"
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+
+case $Menu in
+
+1)     set_back
+       ;;
+
+2)     redhat_install_clickhouse
+       ;;
+
+3)     debian_install_clickhouse
+       ;;
+
+4)     tgz_install_clickhouse
+       ;;
+
+5)     compile_install_clickhouse
+       ;;     
+
+0)     set_et
+       ;;
+
+esac
+done
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+install_docker(){
+while :;do
+    echo -e "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+========================================================
+CentOS7yum源安装，选项3弃用
+Ubuntu安装还没写
+安装podman还没写
+二进制安装可在线可离线
+========================================================
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        ********** 
+**********           安装docker                   **********    
+**********                                        **********
+**********        1.返回上一目录                  **********
+**********                                        **********
+**********        2.CentOS7yum源安装              **********
+**********        3.CentOS7yum源安装              **********
+**********        4.CentOS8yum源版本              **********
+**********        5.Ubuntu安装                    **********
+**********        6.二进制安装                    **********
+**********        7.安装podman                    **********
+**********        8.安装docker-compose            **********
+**********        9.卸载docker                    **********
+**********                                        **********
+**********        0.退出                          ********** 
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+
+    echo -e "\E[0m"
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+
+case $Menu in
+
+1)     set_back
+       ;;
+
+2)     c7_yum_docker
+       ;;
+
+3)     c7_yum2_docker
+       ;;
+
+4)     c8_yum_docker
+       ;;
+
+5)     ubuntu_docker
+       ;;
+
+6)     offline_install_docker
+       ;;
+
+7)     install_podman
+       ;;
+
+8)     install_docker_compose
+       ;;
+
+9)     uninstall_docker
+       ;;
+
+0)     set_et
+       ;;
+
+esac
+done
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+reset_PS1(){
+while :;do
+    echo -e  "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        **********
+**********           修改主机名颜色               ********** 
+**********                                        **********
+**********     1.返回上一目录                     **********
+**********                                        **********
+**********     2.Redhat7以上或Ubuntu              **********
+**********     3.Redhat6                          **********
+**********                                        **********
+**********     0.退出                             **********
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+        echo -e "\E[0m"
+
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+case $Menu in
+1)      set_back
+        ;;
+
+2)      set_PS1
+        ;;
+
+3)      set_c6_PS1
+        ;;
+
+
+0)      set_et
+        ;;
+
+esac
+done
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+set_net(){
+while :;do
+    echo -e  "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        **********
+**********            网卡配置                    ********** 
+**********                                        **********
+**********     1.返回上一目录                     **********
+**********                                        **********
+**********     2.配置Redhat7以上系列网卡文件      **********
+**********     3.配置Redhat6版本网卡文件          **********
+**********     4.配置Ubuntu网卡文件               **********
+**********     ============================       ********** 
+**********     5.Redhat系列修改网卡名为eth0       **********
+**********     6.Ubuntu修改网卡名为eth0           **********
+**********                                        **********
+**********     0.退出                             **********
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+        echo -e "\E[0m"
+
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+case $Menu in
+2)      configure_redhat_IP_address
+        ;;
+
+3)      configure_redhat6_IP_address
+        ;;
+
+4)      configure_ubuntu_IP_address
+        ;;
+
+5)      set_redhat_netname
+        ;;
+
+6)      set_ubuntu_netname
+        ;;
+
+1)      set_back
+        ;;
+
+0)      set_et
+        ;;
+
+esac
+done
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ubuntu_source(){
+while :;do
+    echo -e  "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        **********
+**********        ubuntu源配置                    ********** 
+**********                                        **********
+**********     1.返回上一目录                     **********
+**********                                        **********
+**********     2.阿里云源                         **********
+**********     3.清华大学源                       **********
+**********     4.中科大源                         **********
+**********     5.ubuntu2004阿里源                 **********
+**********     6.ubuntu1804阿里源                 **********
+**********     7.ubuntu1604阿里源                 **********
+**********                                        **********
+**********     0.退出                             **********
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+        echo -e "\E[0m"
+
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+case $Menu in
+2)      ubuntu_aliyun_source
+        ;;
+
+3)      ubuntu_tuna_source
+        ;;
+
+4)      ubuntu_ustc_source
+        ;;
+
+5)      ubuntu2004_aliyun_source
+        ;;
+
+6)      ubuntu1804_aliyun_source
+        ;;
+
+7)      ubuntu1604_aliyun_source
+        ;;
+
+1)      set_back
+        ;;
+
+0)      set_et
+        ;;
+
+esac
+done
+
+}
+
+
+
+
+
+set_centos7_yum(){
+    while :;do
+    echo -e  "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+============================================================
+适用于centos7.9.2009和redhat7.9
+============================================================
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        **********
+**********           centos7                      **********
+**********                                        **********
+**********         1.返回上一目录                 **********
+**********                                        ********** 
+**********         2.配置EPEL源                   **********
+**********         3.配置阿里源                   **********
+**********         4.配置清华源                   **********
+**********         5.配置网易源                   **********
+**********         6.配置华为源                   **********
+**********         7.配置南京大学源               **********
+**********         8.配置所有源(无挂载磁盘)       **********
+**********         9.配置所有源(有挂载磁盘)       **********
+**********                                        **********
+**********         0.退出                         **********
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+        echo -e "\E[0m"
+
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+case $Menu in
+2)      set_epel
+        ;;
+
+3)      set_ali
+        ;;
+
+4)      set_qinghua
+        ;;
+
+5)      set_wangyi
+        ;;
+
+6)      set_huawei
+        ;;
+
+7)      set_nanjing
+        ;;
+
+8)      set_yum3_centos7
+        ;;
+
+9)      set_yum2_centos7
+        ;;
+
+
+1)      set_back
+        ;;
+
+0)      set_et
+        ;;
+
+esac
+done
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+set_yum(){
+while :;do
+    echo -e  "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+============================================================
+Rocky8.7建议用3选项
+2选项是没有挂载光盘
+3选项是附带挂载光盘
+============================================================
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        **********
+**********             配置yum源                  **********
+**********                                        **********
+**********         1.返回上一目录                 **********
+**********                                        ********** 
+**********         2.配置Rocky8 yum源             **********
+**********         3.配置Rocky8 yum源             **********
+**********         4.配置Rocky8 EPEL源            **********
+**********         =======================        **********
+**********         5.配置centos7 源               **********
+**********         =======================        **********
+**********         6.配置centos6.10 yum源         **********
+**********         7.配置centos6 EPEL源           **********
+**********         8.配置centos6.5 yum源          **********
+**********         9.配置centos6.6 yum源          **********
+**********         =======================        **********
+**********         10.配置ubuntu apt源            **********
+**********                                        **********
+**********         0.退出                         **********
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+        echo -e "\E[0m"
+
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+case $Menu in
+2)      set_yum2_rocky8
+        ;;
+
+3)      set_yum_rocky8
+        ;;
+
+4)      set_epel_rocky8
+        ;;
+
+5)      set_centos7_yum
+        ;;
+
+6)      set_yum_centos610
+        ;;
+
+7)      set_epel_centos6
+        ;;
+
+8)      set_yum_centos65
+        ;;
+
+9)      set_yum_centos66
+        ;;
+
+10)     ubuntu_source
+        ;;
+
+
+1)      set_back
+        ;;
+
+0)      set_et
+        ;;
+
+esac
+done
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+set_firewalld(){
+while :;do
+    echo -e "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        ********** 
+**********             关闭防火墙                 **********    
+**********                                        **********
+**********           1.返回上一目录               **********
+**********                                        **********
+**********           2.Redhat7以上版本            **********
+**********           3.Redhat6版本                **********
+**********                                        **********
+**********           0.退出                       ********** 
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+
+    echo -e "\E[0m"
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+
+case $Menu in
+
+1)     set_back
+       ;;
+
+2)     disable_firewalld
+       ;;
+
+3)     stop_centos6_firewalld
+       ;;
+
+0)     set_et
+       ;;
+
+esac
+done
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+software(){
+while :;do
+    echo -e "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+========================================
+Ubuntu和redhat安装的软件多少不一样
+========================================
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        ********** 
+**********           安装初始化软件               **********    
+**********                                        **********
+**********           1.返回上一目录               **********
+**********                                        **********
+**********           2.Redhat7,8系列              **********
+**********           3.Redhat6系列                **********
+**********           4.Ubuntu系列                 **********
+**********                                        **********
+**********           0.退出                       ********** 
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+
+    echo -e "\E[0m"
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+
+case $Menu in
+
+1)     set_back
+       ;;
+
+2)     c7_software
+       ;;
+
+3)     c6_software
+       ;;
+
+4)     Ubuntu_software
+       ;;
+
+0)     set_et
+       ;;
+
+esac
+done
+
+
+
+
+}
+
+time1(){
+clock -s
+}
+
+time2(){
+clock -w
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+rpm_install_mysql(){
+while :;do
+    echo -e "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        ********** 
+**********           安装MySQL社区版              **********    
+**********                                        **********
+**********           1.返回上一目录               **********
+**********                                        **********
+**********           2.MySQL5.7                   **********
+**********           3.MySQL8.0                   **********
+**********                                        **********
+**********           0.退出                       ********** 
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+
+echo -e "\E[0m"
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+
+case $Menu in
+
+1)     set_back
+       ;;
+
+2)     rpm_install_mysql57
+       ;;
+
+3)     rpm_install_mysql8
+       ;;
+
+
+0)     set_et
+       ;;
+
+esac
+done
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+install_Database(){
+while :;do
+    echo -e "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        ********** 
+**********             安装数据库                 **********    
+**********                                        **********
+**********           1.返回上一目录               **********
+**********                                        **********
+**********           2.二进制安装MySQL            **********
+**********           3.yum源安装MySQL             **********
+**********           4.二进制安装MariaDB          **********
+**********           5.yum源安装MariaDB           **********
+**********                                        **********
+**********           0.退出                       ********** 
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+
+echo -e "\E[0m"
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+
+case $Menu in
+
+1)     set_back
+       ;;
+
+2)      install_mysql
+        ;;
+
+3)      rpm_install_mysql
+        ;;
+
+4)      install_mariadb
+        ;;
+
+5)      yum_mariadb
+        ;;
+
+0)     set_et
+       ;;
+
+esac
+done
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+install_NGINX(){
+while :;do
+    echo -e "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        ********** 
+**********             安装NGINX                  **********    
+**********                                        **********
+**********           1.返回上一目录               **********
+**********                                        **********
+**********           2.编译安装Nginx              **********
+**********           3.升级Nginx                  **********
+**********           4.升级srun-Nginx             **********
+**********           5.升级旧版本srun-Nginx       **********
+**********                                        **********
+**********           0.退出                       ********** 
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+
+echo -e "\E[0m"
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+
+case $Menu in
+
+1)     set_back
+       ;;
+
+
+2)      install_nginx1
+        ;;
+
+3)      update_nginx
+        ;;
+
+4)      update_srunnginx
+        ;;
+
+5)      update_srunnginx2
+        ;;
+
+0)     set_et
+       ;;
+
+esac
+done
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+install_SSHSSL(){
+while :;do
+    echo -e "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+============================================================
+**********以下支持在centos7系列使用*************
+3.升级openssl到1.1.1w版本
+4.升级openssh到9.7p1版本
+5 适用于从openssl1.*版本升级到openssl1.1.1w,openssh9.7p1
+6 适用于从openssl1.*版本升级到openssl3.3.0,openssh9.7p1
+7.适用于从openssl3.*版本升级到openssl3.3.1,openssh9.8p1
+8.适用于从openssl1.*版本升级到openssl3.3.1,openssh9.8p1
+**********以下支持在centos6系列使用*************
+9.适用于从openssl1.*版本升级到openssl3.3.1,openssh9.8p1
+============================================================
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        ********** 
+**********          升级安装openssl,openssh       **********    
+**********                                        **********
+**********           1.返回上一目录               **********
+**********                                        **********
+**********           2.安装telnet                 **********
+**********           3.升级安装openssl            **********
+**********           4.升级安装openssh            **********
+**********           5.升级openssl,openssh        **********
+**********           6.升级openssl,openssh        **********
+**********           7.升级openssl,openssh        **********
+**********           8.升级openssl,openssh        **********
+**********           9.升级openssl,openssh        **********
+**********                                        **********
+**********           0.退出                       ********** 
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+
+echo -e "\E[0m"
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+
+case $Menu in
+
+1)     set_back
+       ;;
+
+2)      install_telnet
+        ;;
+
+3)      update_openssl
+        ;;
+
+4)     update_openssh
+        ;;
+
+5)     update_sshssl1
+        ;;
+
+6)     update_sshssl2
+        ;;
+
+7)     update_sshssl3
+        ;;
+
+8)     update_sshssl4
+        ;;
+
+9)     update_sshssl5
+        ;;
+
+0)     set_et
+       ;;
+
+esac
+done
+}
+
+
+
+
+install_prometheus(){
+while :;do
+    echo -e "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+
+
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        ********** 
+**********            安装prometheus              **********    
+**********                                        **********
+**********           1.返回上一目录               **********
+**********                                        **********
+**********           2.                          **********
+**********                                        **********
+**********           0.退出                       ********** 
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+
+echo -e "\E[0m"
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+
+case $Menu in
+
+1)     set_back
+       ;;
+
+2)     install_prometheus1
+        ;;
+
+0)     set_et
+       ;;
+
+esac
+done
+}
+
+
+
+
+
+
+
+
+install_service(){
+	while :;do
+	echo -e "\E[$[RANDOM%7+31];1m"
+	cat << EOF
+
+
+************************************************************
+************************************************************
+************************************************************
+************************************************************
+**********                                        **********
+**********              安装服务                  **********
+**********                                        **********
+**********           1.返回上一目录               **********
+**********                                        **********
+**********           2.安装Database               **********
+**********           3.安装Nginx                  **********
+**********           4.升级安装openssl,openssh    **********
+**********           5.安装docker                 **********
+**********           6.安装clickhouse             **********
+**********           7.安装Redis                  **********
+**********           8.安装keepalived             **********
+**********           9.安装jumpserver             **********
+**********           10.安装zabbix                **********
+**********           11.安装DNS                   **********
+**********           12.安装kubernetes            **********
+**********           13.安装prometheus            **********
+**********           14.安装telnet                **********
+**********                                        **********
+**********           0.退出                       **********
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+	echo -e "\E[0m"
+
+
+
+read -p "$(echo -e '\e[1;36m请输入序号:  \e[0m')" Menu
+
+case $Menu in
+
+2)      install_Database
+	    ;;
+
+3)      install_NGINX
+        ;;
+
+4)     install_SSHSSL
+        ;;
+
+5)     install_docker
+        ;;
+
+6)     install_clickhouse
+        ;;
+
+7)     install_redis
+        ;;
+
+8)     install_keepalived
+        ;;
+
+9)     install_jumpserver
+        ;;
+
+10)     install_zabbix
+        ;;
+
+11)     install_dns
+        ;;
+
+12)     install_kubernetes
+        ;;
+
+13)     install_prometheus
+        ;;
+
+14)     install_telnet
+        ;;
+
+39)     install_haproxy
+        ;;
+
+40)     install_jenkins
+        ;;
+
+41)     install_halo
+        ;;
+
+42)     install_lua
+        ;;
+
+43)     install_gitlab
+        ;;
+
+44)     install_git
+        ;;
+
+45)     install_wordpress
+        ;;
+
+46)     install_apache
+        ;;
+
+47)     install_jdk
+        ;;
+
+48)     install_php
+        ;;
+
+49)     install_phpadmin
+        ;;
+
+50)     install_memcached
+        ;;
+
+1)      set_back
+        ;;
+
+0)	set_et
+	;;
+
+esac
+done
+
+}
+
+
+set_all(){
+while :;do
+    echo -e  "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        ********** 
+**********              系统设置                  ********** 
+**********                                        **********
+**********  1.返回上一目录                        **********
+**********                                        **********
+**********  2.关闭防火墙         3.关闭SELINUX    **********
+**********  4.安装初始化软件     5.配置yum,apt源  **********
+**********         ====================           **********
+**********  6.网卡配置           7.修改别名       **********
+**********  8.修改主机名颜色     9.修改主机名     **********
+**********         ====================           **********
+**********  10.设置vim           11.设置时区      **********
+**********  12.设置登录显示      13.矫正软件时间  **********
+**********         ====================           **********
+**********  14.矫正硬件时间      15.垃圾桶        **********
+**********  16.设置邮箱          17.优化ulimit    **********
+**********         ====================           **********
+**********  18.禁用swap          19.启用swap      **********
+**********  20.修改ssh端口号     21.ubuntu远程登录**********
+*********         ====================            **********
+**********  22.sshpass验证       23.ssh登录显示   **********
+**********  24.邮箱告警                           **********
+**********                                        **********
+**********  0.退出                                **********
+************************************************************       
+************************************************************
+************************************************************
+EOF
+    echo -e "\E[0m"
+
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu 
+case $Menu in
+
+
+2)  set_firewalld
+    ;;
+
+3)  disable_selinux
+    ;;
+
+4)      software
+        ;;
+
+5)      set_yum
+        ;;
+
+6)  set_net
+    ;;
+
+7)  set_alias
+    ;;
+
+8)  reset_PS1
+    ;;
+
+9)  set_hostname
+    ;;
+
+10)     set_vim
+        ;;
+
+11)     set_timezone
+        ;;
+
+12)     set_motd1
+        ;;
+
+13)     time1
+        ;;
+
+14)     time2
+        ;;
+
+15)     set_rm
+        ;;
+
+16)     set_mail
+        ;;
+
+17)     set_ulimit
+        ;;
+
+18)     stop_swap
+        ;;
+
+19)     start_swap
+        ;;
+
+20)     set_ssh
+        ;;
+
+21)     ubuntu_root_login
+        ;;
+
+22)     sshpass_key
+        ;;
+
+23)     ssh_auth
+        ;;
+
+24)     mail_alarm
+        ;;
+
+1)      set_back
+        ;;
+
+0)  set_et
+    ;;
+
+esac
+done
+
 }
 
 
@@ -9974,6 +10072,8 @@ case $option in
 
 0) 	set_et
 	;;
-	
+
+*)      echo -e "\n\e[1;31m无效的选项\e[0m" 
+        ;;
 esac
 done
