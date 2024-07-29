@@ -11,6 +11,7 @@ import (
 	"time"
 )
 
+
 func main() {
 	for {
 		fmt.Println("\033[1;35m") // 随机颜色可能在 Go 中不太适用，这里用红色
