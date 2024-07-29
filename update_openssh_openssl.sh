@@ -28,6 +28,7 @@ echo -e "\e[1;35m手动测试telnet连接是否正常\e[0m"
 
 
 
+
 update_sshssl(){
 local ZLIBV=1.3.1
 local OPENSSHV=9.7p1

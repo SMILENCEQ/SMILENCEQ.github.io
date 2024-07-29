@@ -24,6 +24,7 @@ echo "IGNORE 1 ROWS" >> $TEMP_SQL_FILE
 echo "(user_name, phone);" >> $TEMP_SQL_FILE
 
 
+
 #创建临时表
 mysql  -u$DB_USER -p$DB_PASSWORD $DB_NAME << EOF
 DROP  TABLE IF EXISTS $DB_TABLE;

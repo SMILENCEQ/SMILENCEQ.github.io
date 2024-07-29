@@ -24,6 +24,7 @@ EOF
 
 
 
+
 echo -e "\e[1;35m手动测试telnet连接是否正常\e[0m"
 }
 
