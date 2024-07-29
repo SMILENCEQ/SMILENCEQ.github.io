@@ -12,7 +12,7 @@
 
 set -u #需要手动执行一下
 set -e #cd /data rm -rf ./* 如果data不存在，后面rm就不会执行
-LOG_FILE="/var/log/csh.log"  # 日志文件路径
+#LOG_FILE="/var/log/csh.log"  # 日志文件路径
 
 # 日志记录函数
 #log() {
@@ -77,7 +77,7 @@ color () {
 
 ##########################################
 ## Starting
-CshVersion=v4.7.24
+CshVersion=v4.7.25
 echo  "============================================================"
 echo -e "\e[1;$[RANDOM%7+31]m
   ███████╔ ████████═ ██╗   ██╗ 
