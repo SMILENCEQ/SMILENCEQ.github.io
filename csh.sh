@@ -77,7 +77,7 @@ color () {
 
 ##########################################
 ## Starting
-CshVersion=v4.7.25
+CshVersion=v4.8.6
 echo  "============================================================"
 echo -e "\e[1;$[RANDOM%7+31]m
   ███████╔ ████████═ ██╗   ██╗ 
@@ -217,7 +217,7 @@ stop_centos6_firewalld(){
     [ $? -eq 0 ] && color "防火墙关闭成功 " 0 || color "防火墙关闭失败 " 1
 }
 
-disable_selinux(){
+disableSelinux(){
     sed -i 's/SELINUX=enforcing/SELINUX=disabled/'    /etc/selinux/config
     color "SELINUX关闭完成" 0
     setenforce 0
@@ -467,7 +467,7 @@ systemctl  restart sshd
 }
 
 
-systeminfo(){
+systemInfo(){
 local CORES=`cat /proc/cpuinfo | grep "cores" | wc -l`
 local CPUINFO=`cat /proc/cpuinfo  | grep name | cut -d: -f2 |uniq -c | tr -s ' '` 
 local CPUNUM=`cat /proc/cpuinfo | grep "cores" | uniq|wc -l`
@@ -507,9 +507,9 @@ echo -e "\n\e[1;35mGoodBye!\e[0m\n"
 exit
 }
 
-set_back(){
-break 
-}
+#set_back(){
+#break 
+#}
 
 
 set_yum_rocky8(){
@@ -7519,15 +7519,6 @@ ssh_auth(){
 target_file="/etc/profile.d/system_info.sh"
 cat << 'EOF' > $target_file
 #/bin/bash
-#Copyright (c) [2019] Huawei Technologies Co., Ltd.
-#generic-release is licensed under the Mulan PSL v2.
-#You can use this software according to the terms and conditions of the Mulan PSL v2.
-#You may obtain a copy of Mulan PSL v2 at:
-#     http://license.coscl.org.cn/MulanPSL2
-#THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
-#PURPOSE.
-#See the Mulan PSL v2 for more details.
 
 # Welcome
 welcome=$(uname -r)
@@ -7796,7 +7787,7 @@ mail_alarm1() {
 
 
 
-update_log(){
+updateLog(){
 
 echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
                  echo "2022-11-26 version:v2.11.26"
@@ -7855,7 +7846,7 @@ init 0
 
 
 
-set_reset(){
+setReset(){
 
 echo -e "\e[1;35m====================================================================================================================================\e[0m"
 echo -e "\e[1;35m一键初始化\e[0m"
@@ -8143,7 +8134,7 @@ ${PURPLE} memcached $END
 
 
 
-one_step(){
+oneStep(){
     while :;do
 echo -e "\n\e[1;$[RANDOM%7+31]m ^_^~~~^_^centos7一键初始化 ^_^~~~^_^\e[0m"
 echo -e "\n\e[1;31m暂时弃用\e[0m"
@@ -8164,11 +8155,11 @@ read -p "$(echo -e '\e[1;35m输入序号: \e[0m')" OOOO
 
 case $OOOO in
 
-1)    set_back
+1)    break
       ;;
 2)    disable_firewalld
       ;;
-3)    disable_selinux
+3)    disableSelinux
       ;;
 4)    set_ulimit
       ;;
@@ -8239,7 +8230,7 @@ read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
 
 case $Menu in
 
-1)     set_back
+1)     break
        ;;
 
 2)     install_kubernetes_ubuntu_master
@@ -8316,7 +8307,7 @@ read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
 
 case $Menu in
 
-1)     set_back
+1)     break
        ;;
 
 2)     install_kubernetes_radhat_master
@@ -8386,7 +8377,7 @@ read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
 
 case $Menu in
 
-1)     set_back
+1)     break
        ;;
 
 2)     install_kubernetes_radhat
@@ -8465,7 +8456,7 @@ read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
 
 case $Menu in
 
-1)     set_back
+1)     break
        ;;
 
 2)     install_rocky8_zabbix6
@@ -8567,7 +8558,7 @@ read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
 
 case $Menu in
 
-1)     set_back
+1)     break
        ;;
 
 2)     compile_install_keepalived
@@ -8632,7 +8623,7 @@ read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
 
 case $Menu in
 
-1)     set_back
+1)     break
        ;;
 
 2)     compile_install_redis
@@ -8709,7 +8700,7 @@ read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
 
 case $Menu in
 
-1)     set_back
+1)     break
        ;;
 
 2)     redhat_install_clickhouse
@@ -8791,7 +8782,7 @@ read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
 
 case $Menu in
 
-1)     set_back
+1)     break
        ;;
 
 2)     c7_yum_docker
@@ -8876,7 +8867,7 @@ EOF
 
 read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
 case $Menu in
-1)      set_back
+1)      break
         ;;
 
 2)      set_PS1
@@ -8963,7 +8954,7 @@ case $Menu in
 6)      set_ubuntu_netname
         ;;
 
-1)      set_back
+1)      break
         ;;
 
 0)      set_et
@@ -9047,7 +9038,7 @@ case $Menu in
 7)      ubuntu1604_aliyun_source
         ;;
 
-1)      set_back
+1)      break
         ;;
 
 0)      set_et
@@ -9125,7 +9116,7 @@ case $Menu in
         ;;
 
 
-1)      set_back
+1)      break
         ;;
 
 0)      set_et
@@ -9138,47 +9129,27 @@ done
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-set_yum(){
-while :;do
+set_centos6_yum(){
+    while :;do
     echo -e  "\E[$[RANDOM%7+31];1m"
     cat << EOF
+
 ============================================================
-Rocky8.7建议用3选项
-2选项是没有挂载光盘
-3选项是附带挂载光盘
+选项3可适用于大版本是centos6的系统
 ============================================================
 
 ************************************************************
 ************************************************************
 ************************************************************
 **********                                        **********
-**********             配置yum源                  **********
+**********           centos6                      **********
 **********                                        **********
 **********         1.返回上一目录                 **********
 **********                                        ********** 
-**********         2.配置Rocky8 yum源             **********
-**********         3.配置Rocky8 yum源             **********
-**********         4.配置Rocky8 EPEL源            **********
-**********         =======================        **********
-**********         5.配置centos7 源               **********
-**********         =======================        **********
-**********         6.配置centos6.10 yum源         **********
-**********         7.配置centos6 EPEL源           **********
-**********         8.配置centos6.5 yum源          **********
-**********         9.配置centos6.6 yum源          **********
-**********         =======================        **********
-**********         10.配置ubuntu apt源            **********
+**********         2.配置EPEL源                   **********
+**********         3.配置centos6.10               **********
+**********         4.配置centos6.5                **********
+**********         5.配置centos6.6                **********
 **********                                        **********
 **********         0.退出                         **********
 **********                                        **********
@@ -9192,35 +9163,137 @@ EOF
 
 read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
 case $Menu in
-2)      set_yum2_rocky8
+2)      set_epel_centos6
         ;;
 
-3)      set_yum_rocky8
+3)      set_yum_centos610
         ;;
 
-4)      set_epel_rocky8
+4)      set_yum_centos65
         ;;
 
-5)      set_centos7_yum
-        ;;
-
-6)      set_yum_centos610
-        ;;
-
-7)      set_epel_centos6
-        ;;
-
-8)      set_yum_centos65
-        ;;
-
-9)      set_yum_centos66
-        ;;
-
-10)     ubuntu_source
+5)      set_yum_centos66
         ;;
 
 
-1)      set_back
+
+1)      break
+        ;;
+
+0)      set_et
+        ;;
+
+esac
+done
+
+}
+
+
+
+set_Rocky8_yum(){
+    while :;do
+    echo -e  "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        **********
+**********           Rocky8                       **********
+**********                                        **********
+**********         1.返回上一目录                 **********
+**********                                        ********** 
+**********         2.配置EPEL源                   **********
+**********         3.配置Rocky8(无挂载磁盘)       **********
+**********         4.配置Rocky8(有挂载磁盘)       **********
+**********                                        **********
+**********         0.退出                         **********
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+        echo -e "\E[0m"
+
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+case $Menu in
+2)      set_epel_rocky8
+        ;;
+
+3)      set_yum2_rocky8
+        ;;
+
+4)      set_yum_rocky8
+        ;;
+
+
+1)      break
+        ;;
+
+0)      set_et
+        ;;
+
+esac
+done
+
+}
+
+
+
+
+
+
+set_yum(){
+while :;do
+    echo -e  "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        **********
+**********             配置yum源                  **********
+**********                                        **********
+**********         1.返回上一目录                 **********
+**********                                        ********** 
+**********         2.配置Rocky8 源                **********
+**********         =======================        **********
+**********         3.配置centos7 源               **********
+**********         =======================        **********
+**********         4.配置centos6 源               **********
+**********         =======================        **********
+**********         5.配置ubuntu apt源             **********
+**********                                        **********
+**********         0.退出                         **********
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+        echo -e "\E[0m"
+
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+case $Menu in
+2)      set_Rocky8_yum
+        ;;
+
+3)      set_centos7_yum
+        ;;
+
+4)      set_centos6_yum
+        ;;
+
+5)     ubuntu_source
+        ;;
+
+
+1)      break
         ;;
 
 0)      set_et
@@ -9244,7 +9317,7 @@ done
 
 
 
-set_firewalld(){
+setFirewalld(){
 while :;do
     echo -e "\E[$[RANDOM%7+31];1m"
     cat << EOF
@@ -9275,7 +9348,7 @@ read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
 
 case $Menu in
 
-1)     set_back
+1)     break
        ;;
 
 2)     disable_firewalld
@@ -9344,7 +9417,7 @@ read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
 
 case $Menu in
 
-1)     set_back
+1)     break
        ;;
 
 2)     c7_software
@@ -9442,7 +9515,7 @@ read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
 
 case $Menu in
 
-1)     set_back
+1)     break
        ;;
 
 2)     rpm_install_mysql57
@@ -9509,7 +9582,7 @@ read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
 
 case $Menu in
 
-1)     set_back
+1)     break
        ;;
 
 2)      install_mysql
@@ -9582,7 +9655,7 @@ read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
 
 case $Menu in
 
-1)     set_back
+1)     break
        ;;
 
 
@@ -9669,7 +9742,7 @@ read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
 
 case $Menu in
 
-1)     set_back
+1)     break
        ;;
 
 2)      install_telnet
@@ -9738,7 +9811,7 @@ read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
 
 case $Menu in
 
-1)     set_back
+1)     break
        ;;
 
 2)     install_prometheus1
@@ -9758,7 +9831,7 @@ done
 
 
 
-install_service(){
+installService(){
 	while :;do
 	echo -e "\E[$[RANDOM%7+31];1m"
 	cat << EOF
@@ -9878,7 +9951,7 @@ case $Menu in
 50)     install_memcached
         ;;
 
-1)      set_back
+1)      break
         ;;
 
 0)	set_et
@@ -9890,7 +9963,7 @@ done
 }
 
 
-set_all(){
+setAll(){
 while :;do
     echo -e  "\E[$[RANDOM%7+31];1m"
     cat << EOF
@@ -9933,10 +10006,10 @@ read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
 case $Menu in
 
 
-2)  set_firewalld
+2)  setFirewalld
     ;;
 
-3)  disable_selinux
+3)  disableSelinux
     ;;
 
 4)      software
@@ -10002,7 +10075,7 @@ case $Menu in
 24)     mail_alarm
         ;;
 
-1)      set_back
+1)      break
         ;;
 
 0)  set_et
@@ -10046,22 +10119,22 @@ read -p "$(echo -e '\e[1;34m输入选项:  \e[0m')" option
 case $option in
 
 1)
-	set_all
+	setAll
 	;;
 
-2)	install_service
+2)	installService
 	;;
 
-3)      set_reset
+3)      setReset
         ;;
 
-4)      one_step
+4)      oneStep
         ;;
 
-5)      update_log
+5)      updateLog
         ;;
 
-6)      systeminfo
+6)      systemInfo
         ;;
 
 7)      re
