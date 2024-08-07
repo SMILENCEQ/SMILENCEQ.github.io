@@ -4,6 +4,8 @@
 
 csh.sh 脚本主要是作为linux系统功能配置和常用linux软件服务安装升级
 
+commad目录中,写这个脚本是为了显示中文linux命令帮助
+
 mail.sh是一个linux上用的邮件告警功能脚本
 
 reset7.sh是一个初始化linux系统脚本,
