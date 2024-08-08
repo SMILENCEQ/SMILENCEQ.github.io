@@ -4,3 +4,4 @@
 
 cmd.go是commad目录中cmd的源码,写这个脚本是为了显示中文linux命令帮助
 
+使用方法:将下载好的goxxxx.linux-amd64.tar.gz包放入command_cn目录下,执行install.sh,即可使用cmd
