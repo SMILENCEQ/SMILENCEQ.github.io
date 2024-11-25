@@ -22,32 +22,6 @@ do
 done
 
 
-echo -e "\e[1;35m==========================安装telnet=================================\e[0m"
-
-software=(
-    "telnet"
-    "telnet-server"
-    "xinetd"
-    )
-for i in ${software[@]}
-do
-rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
-done
-
-
-systemctl enable --now  xinetd.service
-systemctl enable --now  telnet.socket
-
-
-cat >>/etc/securetty<<EOF
-pts/0 
-pts/1
-EOF
-
-
-
-echo -e "\e[1;35m手动测试telnet连接是否正常\e[0m"
-
 echo -e "\e[1;35m==========================检查系统==================================\e[0m"
 
 if [ $ID = 'openEuler' ];then
@@ -94,6 +68,37 @@ else
     echo -e "\e[1;33mopenssh-${OpensshVersion}文件不存在,请将文件放在root目录下\e[0m"
     exit
 fi
+
+
+
+
+
+
+echo -e "\e[1;35m==========================安装telnet=================================\e[0m"
+
+software=(
+    "telnet"
+    "telnet-server"
+    "xinetd"
+    )
+for i in ${software[@]}
+do
+rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+done
+
+
+systemctl enable --now  xinetd.service
+systemctl enable --now  telnet.socket
+
+
+cat >>/etc/securetty<<EOF
+pts/0 
+pts/1
+EOF
+
+
+
+echo -e "\e[1;35m手动测试telnet连接是否正常\e[0m"
 
 
 
