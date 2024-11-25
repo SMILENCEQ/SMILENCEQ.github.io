@@ -5387,19 +5387,29 @@ fi
 
 
 echo -e "\e[1;35m==========================源文件检查================================\e[0m"
-if [ -e "openssl-${OpensslVersion}.tar.gz" ];then
-    echo -e "\e[1;35mopenssl-${OpensslVersion}文件存在\e[0m"
+
+if [ -e "/root/$0" ];then
+    echo -e ""
 else
-    echo -e "\e[1;33mopenssl-${OpensslVersion}文件不存在，开始下载\e[0m"
+    echo -e "\e[1;33m请将脚本文件放在root目录下执行\e[0m"
     exit
 fi
 
 
 
-if [[ -a "openssh-${OpensshVersion}.tar.gz" ]];then
+if [ -e "/root/openssl-${OpensslVersion}.tar.gz" ];then
+    echo -e "\e[1;35mopenssl-${OpensslVersion}文件存在\e[0m"
+else
+    echo -e "\e[1;33mopenssl-${OpensslVersion}文件不存在，请将文件放在root目录下\e[0m"
+    exit
+fi
+
+
+
+if [[ -a "/root/openssh-${OpensshVersion}.tar.gz" ]];then
     echo -e "\e[1;35mopenssh-${OpensshVersion}文件存在\e[0m"
 else
-    echo -e "\e[1;33mopenssh-${OpensshVersion}文件不存在\e[0m"
+    echo -e "\e[1;33mopenssh-${OpensshVersion}文件不存在,请将文件放在root目录下\e[0m"
     exit
 fi
 
