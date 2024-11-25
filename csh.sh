@@ -4716,7 +4716,7 @@ do
     sleep 1
 done
 
-echo -e "\e[1;35m==========================检查系统==================================\e[0m"
+echo -e "\e[1;35m==========================检查系统====================================\e[0m"
 
 if [ ${SystemVersion} -eq 7 ];then
     echo -e "\e[1;32m检测系统为centos7允许执行\e[0m"
@@ -4735,27 +4735,61 @@ fi
 
 
 
-echo -e "\e[1;35m=======================开始升级openssl==============================\e[0m"
-
-echo -e "\e[1;35m==========================源文件检查================================\e[0m"
-if [ -e "openssl-${OpensslVersion}.tar.gz" ];then
-    echo -e "\e[1;35mopenssl-${OpensslVersion}文件存在\e[0m"
-else
-    echo -e "\e[1;33mopenssl-${OpensslVersion}文件不存在，开始下载\e[0m"
-    wget --no-check-certificate https://www.openssl.org/source/openssl-${OpensslVersion}.tar.gz
-fi
-
-
-
-
-
-echo "执行网络检测"
+echo -e "\e[1;35m==========================执行网络检测==================================\e[0m"
 if ping -c 1 www.baidu.com >/dev/null;then
     echo -e "\e[1;32m"网络正常"\e[0m"
 else
     echo -e "\e[1;31m"网络不通"\e[0m"
     
 fi
+
+
+echo -e "\e[1;35m==========================源文件检查=====================================\e[0m"
+
+
+
+
+
+if [ -e "/root/$0" ];then
+    echo -e ""
+else
+    echo -e "\e[1;33m请将脚本文件放在root目录下执行\e[0m"
+    exit
+fi
+
+
+
+
+if [[ -a "/root/zlib-${ZlibVersion}.tar.gz" ]];then
+    echo -e "\e[1;35mzlib-${ZlibVersion}文件存在\e[0m"
+else
+    echo -e "\e[1;33mzzlib-${ZlibVersion}文件不存在,请将文件放在root目录下\e[0m"
+    exit
+fi
+
+if [[ -a "/root/openssh-${OpensshVersion}.tar.gz" ]];then
+    echo -e "\e[1;35mopenssh-${OpensshVersion}文件存在\e[0m"
+else
+    echo -e "\e[1;33mopenssh-${OpensshVersion}文件不存在,请将文件放在root目录下\e[0m"
+    exit
+fi
+
+if [ -e "openssl-${OpensslVersion}.tar.gz" ];then
+    echo -e "\e[1;35mopenssl-${OpensslVersion}文件存在\e[0m"
+else
+    echo -e "\e[1;33mopenssl-${OpensslVersion}文件不存在,请将文件放在root目录下\e[0m"
+    exit
+fi
+
+
+
+
+
+
+
+
+echo -e "\e[1;35m=======================开始升级openssl==============================\e[0m"
+
 
 
 
@@ -4832,21 +4866,6 @@ echo -e "\e[1;35m=======================开始升级openssh=====================
 
 
 
-echo -e "\e[1;35m==========================源文件检查=====================================\e[0m"
-
-if [[ -a "zlib-${ZlibVersion}.tar.gz" ]];then
-    echo -e "\e[1;35mzlib-${ZlibVersion}文件存在\e[0m"
-else
-    echo -e "\e[1;33mzzlib-${ZlibVersion}文件不存在\e[0m"
-    exit
-fi
-
-if [[ -a "openssh-${OpensshVersion}.tar.gz" ]];then
-    echo -e "\e[1;35mopenssh-${OpensshVersion}文件存在\e[0m"
-else
-    echo -e "\e[1;33mopenssh-${OpensshVersion}文件不存在\e[0m"
-    exit
-fi
 
 
 
@@ -5327,6 +5346,12 @@ echo -e "\e[1;35m离线安装，请提前准备好对应版本的压缩包放在
 echo -e "\e[1;35m====================================================================\e[0m"
 echo -e "\e[1;35m不想安装请在五秒内终止脚本\e[0m\n"
 
+
+
+
+
+
+
 ## 关闭严格模式
 set +u
 source /etc/profile.d/lang.sh
@@ -5337,6 +5362,40 @@ do
     echo -ne "\r"
     sleep 1
 done
+
+
+
+
+echo -e "\e[1;35m==========================源文件检查================================\e[0m"
+
+if [ -e "/root/$0" ];then
+    echo -e ""
+else
+    echo -e "\e[1;33m请将脚本文件放在root目录下执行\e[0m"
+    exit
+fi
+
+
+
+if [ -e "/root/openssl-${OpensslVersion}.tar.gz" ];then
+    echo -e "\e[1;35mopenssl-${OpensslVersion}文件存在\e[0m"
+else
+    echo -e "\e[1;33mopenssl-${OpensslVersion}文件不存在，请将文件放在root目录下\e[0m"
+    exit
+fi
+
+
+
+if [[ -a "/root/openssh-${OpensshVersion}.tar.gz" ]];then
+    echo -e "\e[1;35mopenssh-${OpensshVersion}文件存在\e[0m"
+else
+    echo -e "\e[1;33mopenssh-${OpensshVersion}文件不存在,请将文件放在root目录下\e[0m"
+    exit
+fi
+
+
+
+
 
 
 echo -e "\e[1;35m==========================安装telnet=================================\e[0m"
@@ -5385,33 +5444,6 @@ fi
 
 
 
-
-echo -e "\e[1;35m==========================源文件检查================================\e[0m"
-
-if [ -e "/root/$0" ];then
-    echo -e ""
-else
-    echo -e "\e[1;33m请将脚本文件放在root目录下执行\e[0m"
-    exit
-fi
-
-
-
-if [ -e "/root/openssl-${OpensslVersion}.tar.gz" ];then
-    echo -e "\e[1;35mopenssl-${OpensslVersion}文件存在\e[0m"
-else
-    echo -e "\e[1;33mopenssl-${OpensslVersion}文件不存在，请将文件放在root目录下\e[0m"
-    exit
-fi
-
-
-
-if [[ -a "/root/openssh-${OpensshVersion}.tar.gz" ]];then
-    echo -e "\e[1;35mopenssh-${OpensshVersion}文件存在\e[0m"
-else
-    echo -e "\e[1;33mopenssh-${OpensshVersion}文件不存在,请将文件放在root目录下\e[0m"
-    exit
-fi
 
 
 
