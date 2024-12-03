@@ -75,7 +75,7 @@ color () {
 
 ##########################################
 ## Starting
-CshVersion=v4.11.25
+CshVersion=v4.11.28
 echo  "============================================================"
 echo -e "\e[1;$[RANDOM%7+31]m
 
@@ -251,19 +251,60 @@ disableSelinux(){
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 c6_software(){
 
-local SYS=`cat /etc/redhat-release | cut -d' ' -f1`
-echo "执行网络检测"
-if ping -c 1 www.baidu.com >/dev/null;then
-    echo -e "\e[1;32m"网络正常"\e[0m"
-else
-    echo -e "\e[1;31m"网络不通"\e[0m"
+#local SYS=`cat /etc/redhat-release | cut -d' ' -f1`
+#echo "执行网络检测"
+#if ping -c 1 www.baidu.com >/dev/null;then
+#    echo -e "\e[1;32m"网络正常"\e[0m"
+#else
+#    echo -e "\e[1;31m"网络不通"\e[0m"
     
+#fi
+
+if ! ping -c 5 www.baidu.com > /dev/null;then
+    echo -e "\e[1;31m网络不通，将跳过相关网络依赖步骤。\e[0m"
+    NETWORK_OK=false
+else
+    echo -e "\e[1;32m网络正常\e[0m"
+    NETWORK_OK=true
 fi
 
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    SYSTEM_NAME=$ID
+    VERSION_ID=${VERSION_ID:-unknown}
+elif [ -f /etc/redhat-release ]; then
+    SYSTEM_NAME="centos"
+    if grep -q "release 6" /etc/redhat-release; then
+        VERSION_ID="6"
+    elif grep -q "release 7" /etc/redhat-release; then
+        VERSION_ID="7"
+    else
+        VERSION_ID="无法判断操作系统版本"
+    fi
+else
+    SYSTEM_NAME="无法判断操作系统名称"
+    VERSION_ID="无法判断操作系统版本"
+fi
 
-if [ $SYS = 'CentOS' ];then
+echo -e "\e[1;35m检测到系统为：$SYSTEM_NAME $VERSION_ID\e[0m"
+
+
+
+if $NETWORK_OK && [ "$SYSTEM_NAME" = "centos" ] && [ "$VERSION_ID" = "6" ];then
     software=("lrzsz"
         "vim"
         "wget"
@@ -281,11 +322,20 @@ if [ $SYS = 'CentOS' ];then
         )
     for i in ${software[@]}
     do
-    rpm -q  $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null ; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+            fi
+        fi
+
 
     done
 else 
-    echo -e "\e[1;35m"不是centos系统"\e[0m"
+    echo -e "\e[1;35m"不是centos6系统"\e[0m"
 fi
 
    
@@ -299,17 +349,48 @@ c7_software(){
 #yum -y install bridge-utils.x86_64 libtalloc libpcap libpcap-devel iotop  bzip2 zip unzip htop bash-completion psmisc lrzsz  
 #tree man-pages redhat-lsb-core wget tcpdump ftp rsync vim lsof net-tools  iproute git  
 #yum -y install vim lrzsz bash-completion wget tcpdump redhat-lsb-core psmisc rsync net-tools
-echo "执行网络检测"
-if ping -c 1 www.baidu.com >/dev/null;then
-    echo -e "\e[1;32m"网络正常"\e[0m"
-else
-    echo -e "\e[1;31m"网络不通"\e[0m"
+#echo "执行网络检测"
+#if ping -c 1 www.baidu.com >/dev/null;then
+#    echo -e "\e[1;32m"网络正常"\e[0m"
+#else
+#    echo -e "\e[1;31m"网络不通"\e[0m"
     
+#fi
+
+if ! ping -c 5 www.baidu.com > /dev/null;then
+    echo -e "\e[1;31m网络不通，将跳过相关网络依赖步骤。\e[0m"
+    NETWORK_OK=false
+else
+    echo -e "\e[1;32m网络正常\e[0m"
+    NETWORK_OK=true
 fi
+
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    SYSTEM_NAME=$ID
+    VERSION_ID=${VERSION_ID:-unknown}
+elif [ -f /etc/redhat-release ]; then
+    SYSTEM_NAME="centos"
+    if grep -q "release 6" /etc/redhat-release; then
+        VERSION_ID="6"
+    elif grep -q "release 7" /etc/redhat-release; then
+        VERSION_ID="7"
+    else
+        VERSION_ID="无法判断操作系统版本"
+    fi
+else
+    SYSTEM_NAME="无法判断操作系统名称"
+    VERSION_ID="无法判断操作系统版本"
+fi
+
+echo -e "\e[1;35m检测到系统为：$SYSTEM_NAME $VERSION_ID\e[0m"
+
+
+
 
 #两种写法都一样
 #[[ $ID=~ rocky|centos|rhel ]]
-if [ $ID = 'centos' -o $ID = 'rocky' ];then
+if $NETWORK_OK && [ $ID = 'centos' -o $ID = 'rocky' -o $ID = 'openeuler' -o $ID = 'kylin' ];then
     declare -a software
     #yum -y install vim lrzsz bash-completion wget tcpdump redhat-lsb-core psmisc rsync net-tools mlocate
     software=("lrzsz"
@@ -338,7 +419,16 @@ if [ $ID = 'centos' -o $ID = 'rocky' ];then
         )
     for i in ${software[@]}
     do
-    rpm -q  $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null ; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+            fi
+        fi
+
 
     done
 
@@ -354,15 +444,45 @@ fi
 
 Ubuntu_software(){
 
-echo "执行网络检测"
-if ping -c 1 www.baidu.com >/dev/null;then
-    echo -e "\e[1;32m"网络正常"\e[0m"
-else
-    echo -e "\e[1;31m"网络不通"\e[0m"
+#echo "执行网络检测"
+#if ping -c 1 www.baidu.com >/dev/null;then
+#    echo -e "\e[1;32m"网络正常"\e[0m"
+#else
+#    echo -e "\e[1;31m"网络不通"\e[0m"
     
+#fi
+
+if ! ping -c 5 www.baidu.com > /dev/null;then
+    echo -e "\e[1;31m网络不通，将跳过相关网络依赖步骤。\e[0m"
+    NETWORK_OK=false
+else
+    echo -e "\e[1;32m网络正常\e[0m"
+    NETWORK_OK=true
 fi
 
-    if [ $ID = 'ubuntu' ];then
+
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    SYSTEM_NAME=$ID
+    VERSION_ID=${VERSION_ID:-unknown}
+elif [ -f /etc/redhat-release ]; then
+    SYSTEM_NAME="centos"
+    if grep -q "release 6" /etc/redhat-release; then
+        VERSION_ID="6"
+    elif grep -q "release 7" /etc/redhat-release; then
+        VERSION_ID="7"
+    else
+        VERSION_ID="无法判断操作系统版本"
+    fi
+else
+    SYSTEM_NAME="无法判断操作系统名称"
+    VERSION_ID="无法判断操作系统版本"
+fi
+
+echo -e "\e[1;35m检测到系统为：$SYSTEM_NAME $VERSION_ID\e[0m"
+
+
+if $NETWORK_OK && [ $ID = 'ubuntu' ];then
     declare -a software
     apt update
     software=("lrzsz"
@@ -377,7 +497,16 @@ fi
         )
     for i in ${software[@]}
     do
-    dpkg -l  $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { apt -y install $i &> /dev/null ; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+        if dpkg -l  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if apt -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+            fi
+        fi
+
 done
 else
     echo -e "\e[1;35m"不是Ubuntu系统"\e[0m"
@@ -385,10 +514,38 @@ fi
 
 }
 
+auto_install_software(){
+if [ -f /etc/os-release ]; then
+    # 解析 /etc/os-release 文件
+    . /etc/os-release
+    if [ $ID = 'centos' -o $ID = 'openeuler' -o $ID = 'kylin' -o $ID = 'rocky' ]; then
+        #echo -e "\e[1;35m当前系统是:$NAME，版本号：$VERSION_ID\e[0m"
+        c7_software
+    elif [[ $ID = 'ubuntu' ]]; then
+        #echo -e "\e[1;35m当前系统是:$NAME，版本号：$VERSION_ID\e[0m"
+        Ubuntu_software
+    else
+        echo -e "\e[1;33m未知的系统，$NAME ($ID)，版本号：$VERSION_ID\e[0m"
+        exit
+    fi
 
 
+elif [ -f /etc/redhat-release ]; then
+    os_version=$(cat /etc/redhat-release)
 
+    if [[ $os_version =~ "release 6" ]]; then
+        #echo -e "\e[1;35m当前系统是 CentOS 6\e[0m"
+        c6_software
+    else
+        #echo -e "\e[1;33m未知的系统，具体信息：$os_version\e[0m"
+        exit
+    fi
 
+else
+    echo -e "\e[1;33m无法判断操作系统，未找到 /etc/os-release 或 /etc/redhat-release 文件。\e[0m"
+fi
+
+}
 
 #新添加的防止误删除东西，进行备份了，
 
@@ -2896,7 +3053,15 @@ if [ $ID == "rocky" -o $ID == "centos" ];then
         )
     for i in ${software[@]}
     do
-    rpm -q $i &> /dev/null && echo -e "$i\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\e[1;35m安装成功\e[0m" ; }
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+            fi
+        fi
     done
 else
     apt update &> /dev/null
@@ -2989,7 +3154,15 @@ software=(
     )
 for i in ${software[@]}
 do
-rpm -q $i &> /dev/null && echo -e "$i\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\e[1;35m安装成功\e[0m" ; }
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+            fi
+        fi
 done
 
 #查看当前nginx版本以及编译模块参数
@@ -3157,7 +3330,15 @@ software=(
     )
 for i in ${software[@]}
 do
-rpm -q $i &> /dev/null && echo -e "$i\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\e[1;35m安装成功\e[0m" ; }
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+            fi
+        fi
 done
 
 
@@ -3312,7 +3493,15 @@ software=(
     )
 for i in ${software[@]}
 do
-rpm -q $i &> /dev/null && echo -e "$i\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\e[1;35m安装成功\e[0m" ; }
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+            fi
+        fi
 done
 
 
@@ -3607,7 +3796,15 @@ software=("gcc"
     )
 for i in ${software[@]}
 do
-rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+            fi
+        fi
 done
 
 
@@ -3844,7 +4041,15 @@ software=("gcc"
     )
 for i in ${software[@]}
 do
-rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+            fi
+        fi
 done
 
 echo -e "\e[1;35m===========================解压源文件====================================\e[0m"
@@ -4133,7 +4338,15 @@ software=(
     )
 for i in ${software[@]}
 do
-rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+            fi
+        fi
 done
 
 #更换cpam源
@@ -4234,7 +4447,15 @@ software=("gcc"
     )
 for i in ${software[@]}
 do
-rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+            fi
+        fi
 done
 
 echo -e "\e[1;35m===========================解压源文件====================================\e[0m"
@@ -4810,7 +5031,16 @@ software=(
     )
 for i in ${software[@]}
 do
-rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+#rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+            fi
+        fi
 done
 
 
@@ -4889,7 +5119,16 @@ software=("gcc"
     )
 for i in ${software[@]}
 do
-rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+#rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+            fi
+        fi
 done
 
 echo -e "\e[1;35m===========================解压源文件====================================\e[0m"
@@ -5166,7 +5405,16 @@ software=("gcc"
     )
 for i in ${software[@]}
 do
-rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+#rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+            fi
+        fi
 done
 
 
@@ -5407,7 +5655,16 @@ software=(
     )
 for i in ${software[@]}
 do
-rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+#rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+            fi
+        fi
 done
 
 
@@ -5466,7 +5723,16 @@ software=(
     )
 for i in ${software[@]}
 do
-rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+#rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+            fi
+        fi
 done
 
 
@@ -6327,7 +6593,16 @@ if [ $ID = 'centos' -o $ID = rocky ];then
     )
     for i in ${software[@]}
     do
-    rpm -q $i &> /dev/null && echo -e "$i\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\e[1;35m安装成功\e[0m" ; }
+    #rpm -q $i &> /dev/null && echo -e "$i\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\e[1;35m安装成功\e[0m" ; }
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+            fi
+        fi    
     done
 #ubuntu
 else
@@ -6643,8 +6918,16 @@ software=("zabbix-server-mysql"
         )
 for i in ${software[@]}
 do
-rpm -q  $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null ; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
-
+#rpm -q  $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null ; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+            fi
+        fi
 done
 
 
@@ -7982,7 +8265,16 @@ software=(
     )
 for i in ${software[@]}
 do
-rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+#rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+            fi
+        fi
 done
 
 
@@ -8802,6 +9094,7 @@ disableSelinux---关闭SELINUX
 c6_software---安装初始化软件
 c7_software---安装初始化软件
 Ubuntu_software---安装初始化软件
+auto_install_software----所有系统通用,自动识别系统版本
 set_rm---垃圾桶
 disk
 set_mail
@@ -9179,6 +9472,7 @@ if [[ -n "${1-}" ]];then
         install_php |\
         install_phpadmin |\
         install_memcached |\
+        auto_install_software |\
         help1)
             "$1" #调用与参数同名的函数
             exit 0
@@ -10419,6 +10713,7 @@ while :;do
     cat << EOF
 ========================================
 Ubuntu和redhat安装的软件多少不一样
+选项5 是可以自动识别系统版本进行安装
 ========================================
 
 ************************************************************
@@ -10432,6 +10727,7 @@ Ubuntu和redhat安装的软件多少不一样
 **********           2.Redhat7,8系列              **********
 **********           3.Redhat6系列                **********
 **********           4.Ubuntu系列                 **********
+**********           5.所有系统通用               **********
 **********                                        **********
 **********           0.退出                       ********** 
 **********                                        **********
@@ -10457,6 +10753,9 @@ case $Menu in
        ;;
 
 4)     Ubuntu_software
+       ;;
+
+5)     auto_install_software
        ;;
 
 0)     set_et
