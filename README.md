@@ -16,17 +16,28 @@ update_openssh_openssl.sh和update_ssh_ssl.sh脚本是一键升级openssh,openss
 
 
 
-
-
-### csh v4.8.0   
-
-更新时间 2025-02-11
-
-调整优化centos7.9一键部署kubernetes1.27.4版本
+### reset7.sh
 
 ```sh
-运行脚本方法
+#运行脚本方法
+bash  reset7.sh
+
+reset7.sh是一个初始化linux系统脚本
+
+```
+
+
+
+### csh
+
+```sh
+#运行脚本方法
 bash  csh.sh
+
+csh v4.8.0
+更新时间 2025-02-11
+###################
+调整优化centos7.9一键部署kubernetes1.27.4版本
 输入选项3,选项12 既可以看到kubernetes部署页面,对应选择即可
 目前测试centos7.9可以正常部署运行
 ```
