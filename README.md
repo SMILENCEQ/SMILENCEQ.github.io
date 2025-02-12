@@ -45,6 +45,22 @@ csh v4.7.9
 
 
 
+### update_sshssl_openEuler3.sh
+
+```sh
+#运行脚本方法
+bash   update_sshssl_openEuler3.sh
+openEuler升级到openssh9.9p1,openssl3.4.0
+支持openeuler2203 LTS 和openEuler 2403 LTS
+
+```
+
+
+
+
+
+
+
 ### commad目录
 
 ```sh
