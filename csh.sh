@@ -21,9 +21,6 @@ set -e #cd /data rm -rf ./* 如果data不存在，后面rm就不会执行
 #}
 
 
-
-
-
 # 错误处理函数
 #error_handler() {
 #    local exit_code="$?"
@@ -90,7 +87,7 @@ echo -e "--- csh - Linux初始化脚本和服务程序安装脚本"
 echo -e "--- version: $CshVersion"
 echo -e "--- https://github.com/SMILENCEQ/SMILENCEQ.github.io"
 echo -e "Update time $DATETIME1"
-#echo -e "路漫漫其修远兮，吾将上下而求索"
+echo -e "路漫漫其修远兮，吾将上下而求索"
 #echo -e "\e[1;33m脚本编写纯属个人爱好，生产环境需要自己斟酌使用\e[0m"
 echo "============================================================"
 #echo -e "当前时间:\n" `date +'%F %T'`
