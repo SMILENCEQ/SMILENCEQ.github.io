@@ -98,7 +98,8 @@ mail.sh是一个linux上用的邮件告警功能脚本
 bash  reset7.sh
 
 reset7.sh是一个初始化linux系统脚本
-
+支持openEuler2203，centos7.9，rocky8.5，kylinV10
+初始化内容:更新yum源，安装软件，关闭防火墙，关闭selinux，优化limits，添加别名,修改主机名颜色,历史记录增加条数和时间显示等
 ```
 
 
