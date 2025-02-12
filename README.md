@@ -13,3 +13,15 @@ reset7.sh是一个初始化linux系统脚本,
 update_import_db.sh是一个可以将excel表格数据导入到mysql表,不过该脚本可能存在一些问题
 
 update_openssh_openssl.sh和update_ssh_ssl.sh脚本是一键升级openssh,openssl版本的脚本
+
+
+
+
+
+### csh v4.8.0   
+
+更新时间 2025-02-11
+
+调整优化centos7.9一键部署kubernetes1.27.4版本
+
+![image-20250212164651122](D:\HE\assets\image-20250212164651122.png)
