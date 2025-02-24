@@ -1,7 +1,7 @@
 #!/bin/bash
 #********************************************************************
 #Author:       HEhandsome
-#Date：        2025-02-11
+#Date：        2025-02-24
 #FileName：    csh.sh
 #BLOG:         https://www.cnblogs.com/smlience
 #Description： 路漫漫其修远兮，吾将上下而求索
@@ -69,8 +69,8 @@ color () {
 
 ##########################################
 ## Starting
-CshVersion=v4.8.0
-DATETIME1=2025-02-11
+CshVersion=v4.8.1
+DATETIME1=2025-02-24
 echo  "============================================================"
 echo -e "\e[1;$[RANDOM%7+31]m
 
@@ -86,7 +86,7 @@ echo -e "\e[1;$[RANDOM%7+31]m
 echo -e "--- csh - Linux初始化脚本和服务程序安装脚本"
 echo -e "--- version: $CshVersion"
 echo -e "--- https://github.com/SMILENCEQ/SMILENCEQ.github.io"
-echo -e "Update time $DATETIME1"
+echo -e "--- Update time $DATETIME1"
 echo -e "路漫漫其修远兮，吾将上下而求索"
 #echo -e "\e[1;33m脚本编写纯属个人爱好，生产环境需要自己斟酌使用\e[0m"
 echo "============================================================"
@@ -224,10 +224,17 @@ ceshi3(){
 
 
 disable_firewalld(){
-    systemctl disable --now firewalld
+#    systemctl disable --now firewalld
     #systemctl mask firewalld 禁用
     #systemctl unmask firewalld 启用                              
-    [ $? -eq 0 ] && color "防火墙关闭成功 " 0 || color "防火墙关闭失败 " 1
+#    [ $? -eq 0 ] && color "防火墙关闭成功 " 0 || color "防火墙关闭失败 " 1
+Firewalldstatus=`systemctl status firewalld | grep -o active`
+if [[ ${Firewalldstatus} == "acticve" ]];then
+    systemctl disable --now firewalld
+    [ $? -eq 0 ] && echo -e "\e[1;35mfirewalld关闭成功\e[0m"|| echo -e "\e[1;31m firewalld关闭失败 \e[0m"
+else
+    echo -e "\e[1;35mfirewalld已经是关闭状态\e[0m"
+fi
 }
 
 stop_centos6_firewalld(){
@@ -236,8 +243,15 @@ stop_centos6_firewalld(){
 }
 
 disableSelinux(){
+SELINUXstatus=`getenforce`
+if [[ ${SELINUXstatus} == "Enforcing" ]];then
     sed -i 's/SELINUX=enforcing/SELINUX=disabled/'    /etc/selinux/config
-    color "SELINUX关闭完成" 0
+    [ $? -eq 0 ] && echo -e "\e[1;35mselinux关闭成功\e[0m" || echo -e "\e[1;35mselinux关闭失败\e[0m"
+else
+    echo -e "\e[1;35mselinux已经是关闭状态\e[0m"
+fi
+#   sed -i 's/SELINUX=enforcing/SELINUX=disabled/'    /etc/selinux/config
+#    color "SELINUX关闭完成" 0
     setenforce 0
 
     color "请务必重启！" 0
@@ -7820,19 +7834,20 @@ sed -i '/swap/s/^/#/' /etc/fstab
 echo -e "\e[1;32m=====================================修改主机名=====================================\e[0m"
 IPAD=`hostname -I`
 echo -e "\e[1;35m检测到当前地址为: ${IPAD}\e[0m"
-read -p "输入master主机名(例如k8s-master01):" HOSTNAME1
-read -p "输入node01主机名(例如k8s-node01):" HOSTNAME2
-read -p "输入node02主机名(例如k8s-node02):" HOSTNAME3
-hostnamectl set-hostname ${HOSTNAME1}
+#read -p "输入master主机名(例如k8s-master01):" HOSTNAME1
+read -p "输入node01主机名位数(例如01):" HOSTNAME2
+read -p "输入node02主机名位数(例如02):" HOSTNAME3
+#read -p "修改当前主机名,输入位数(例如01,02):" HOSTNAME4
+hostnamectl set-hostname k8s-master01
 
 read -p "输入masterip:" IP1
 read -p "输入noed01ip:" IP2
 read -p "输入node02ip:" IP3
 
 cat <<EOF >> /etc/hosts
-${IP1} ${HOSTNAME1}
-${IP2} ${HOSTNAME2}
-${IP3} ${HOSTNAME3}
+${IP1} k8s-master01
+${IP2} k8s-node${HOSTNAME2}
+${IP3} k8s-node${HOSTNAME3}
 EOF
 
 
@@ -7915,13 +7930,13 @@ rpm -ivh cri-dockerd-0.3.1-3.el7.x86_64.rpm
 sed -i "s/^ExecStart/#&/" /usr/lib/systemd/system/cri-docker.service
 sed -i '10iExecStart=/usr/bin/cri-dockerd --network-plugin=cni --pod-infra-container-image=registry.aliyuncs.com/google_containers/pause:3.7' /usr/lib/systemd/system/cri-docker.service
 systemctl daemon-reload && systemctl restart docker cri-docker.socket cri-docker
-
+systemctl enable --now docker cri-docker
 [ $? -eq 0 ] && color "成功 " 0 || color "失败 " 1
 
 
 
 
-echo -e "\e[1;32m配置国内yum源，安装 kubeadm、kubelet、kubectl\e[0m"
+echo -e "\e[1;32m======================配置国内yum源，安装 kubeadm、kubelet、kubectl============================\e[0m"
 
 
 cat <<EOF > /etc/yum.repos.d/kubernetes.repo
@@ -7958,7 +7973,7 @@ fi
 sudo install -m 755 runc.amd64  /usr/local/bin/runc
 [ $? -eq 0 ] && color "成功 " 0 || color "失败 " 1
 runc -v
-
+systemctl enable --now containerd
 
 echo -e "\e[1;32m=====================================初始化kubernetes=====================================\e[0m"
 kubeadm init --node-name=k8s-master01 --image-repository=registry.aliyuncs.com/google_containers --cri-socket=unix:///var/run/cri-dockerd.sock --apiserver-advertise-address=${IP1} --pod-network-cidr=10.244.0.0/16 --service-cidr=10.96.0.0/12
@@ -7966,6 +7981,10 @@ kubeadm init --node-name=k8s-master01 --image-repository=registry.aliyuncs.com/g
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+sudo iptables -I INPUT -p tcp --dport 6443 -j ACCEPT
+
+
 
 
 echo -e "\e[1;32m=====================================部署flannel=====================================\e[0m"
@@ -7983,7 +8002,7 @@ else
 fi
 
 kubectl apply -f kube-flannel.yml
-sudo iptables -I INPUT -p tcp --dport 6443 -j ACCEPT
+
 exec bash
 
 }
@@ -8081,27 +8100,27 @@ sed -i '/swap/s/^/#/' /etc/fstab
 #*/5 * * * * /usr/sbin/ntpdate time2.aliyun.com
 
 
-echo -e "\e[1;32m修改主机名\e[0m"
+echo -e "\e[1;32m=====================================================修改主机名==================================================\e[0m"
 IPAD=`hostname -I`
 echo -e "\e[1;35m检测到当前地址为: ${IPAD}\e[0m"
-read -p "输入master主机名(例如k8s-master01):" HOSTNAME1
-read -p "输入node01主机名(例如k8s-node01):" HOSTNAME2
-read -p "输入node02主机名(例如k8s-node02):" HOSTNAME3
-read -p "修改当前主机名为(例如k8s-node01,k8s-node02):" HOSTNAME4
-hostnamectl set-hostname ${HOSTNAME4}
+#read -p "输入master主机名(例如k8s-master01):" HOSTNAME1
+read -p "输入node01主机名位数(例如01):" HOSTNAME2
+read -p "输入node02主机名位数(例如02):" HOSTNAME3
+read -p "修改当前主机名,输入位数(例如01,02):" HOSTNAME4
+hostnamectl set-hostname k8s-node${HOSTNAME4}
 
 read -p "输入masterip:" IP1
 read -p "输入noed01ip:" IP2
 read -p "输入node02ip:" IP3
 
 cat <<EOF >> /etc/hosts
-${IP1} ${HOSTNAME1}
-${IP2} ${HOSTNAME2}
-${IP3} ${HOSTNAME3}
+${IP1} k8s-master01
+${IP2} k8s-node${HOSTNAME2}
+${IP3} k8s-node${HOSTNAME3}
 EOF
 
 
-echo -e "\e[1;32m修改Linux内核参数，添加网桥过滤器和地址转发功能\e[0m"
+echo -e "\e[1;32m===================================修改Linux内核参数，添加网桥过滤器和地址转发功能===================================\e[0m"
 cat >> /etc/sysctl.d/kubernetes.conf <<EOF
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
@@ -8180,7 +8199,7 @@ rpm -ivh cri-dockerd-0.3.1-3.el7.x86_64.rpm
 sed -i "s/^ExecStart/#&/" /usr/lib/systemd/system/cri-docker.service
 sed -i '10iExecStart=/usr/bin/cri-dockerd --network-plugin=cni --pod-infra-container-image=registry.aliyuncs.com/google_containers/pause:3.7' /usr/lib/systemd/system/cri-docker.service
 systemctl daemon-reload && systemctl restart docker cri-docker.socket cri-docker
-
+systemctl enable --now docker cri-docker
 [ $? -eq 0 ] && color "成功 " 0 || color "失败 " 1
 
 
@@ -8229,16 +8248,18 @@ echo -e "\e[1;35m===================================================注意事项
 echo -e "\e[1;32m加入master节点时需要再 kubeadm join 结尾加上   --cri-socket unix:///var/run/cri-dockerd.sock\e[0m\n"
 echo -e "\e[1;35m---------------------------------------------------------------------------------------------------------------------\e[0m"
 
-echo -e "\e[1;32m /etc/kubernetes/admin.conf 需要将master上的admin.conf文件拷贝到node上,再执行以下命令\e[0m"
-echo " export KUBECONFIG=/etc/kubernetes/admin.conf >> ~/.bash_profile"
-echo " source ~/.bash_profile"
-echo -e "\e[1;35m----------------------------------------------执行下面命令部署flannel----------------------------------------------------\e[0m"
+echo -e "\e[1;32m/etc/kubernetes/admin.conf 需要将master上的admin.conf文件拷贝到node上,再执行以下命令\e[0m"
+echo -e "\e[1;32mscp masterIP:/etc/kubernetes/admin.conf /etc/kubernetes/\e[0m"
+echo -e "\e[1;32mecho \"export KUBECONFIG=/etc/kubernetes/admin.conf\" >> ~/.bash_profile\e[0m"
+echo -e "\e[1;32msource ~/.bash_profile\e[0m"
+echo -e "\e[1;35m---------------------------------------------执行下面命令部署flannel----------------------------------------------------\e[0m"
 echo -e "\e[1;32mwget https://github.com/flannel-io/flannel/releases/download/v0.22.0/kube-flannel.yml\e[0m"
 echo -e "\e[1;32mkubectl apply -f kube-flannel.yml\e[0m"
-echo -e "\e[1;35m----------------------------------------遇到node节点一直noready状态可以进行下面操作-----------------------------------------\e[0m"
-echo -e "\e[1;32m mkdir -p /etc/cni/net.d/ \e[0m"
-echo -e "\e[1;32m /opt/cni/bin/flannel 检查是否已有该文件,有的话先删除,然后将主节点上的该文件复制到node节点上\e[0m"
-echo -e "\e[1;32m  /etc/cni/net.d/10-flannel.conflist 检查是否已有该文件,有的话先删除,然后将主节点上的该文件复制到node节点上\e[0m"
+echo -e "\e[1;35m--------------------------------------遇到node节点一直noready状态可以进行下面操作-----------------------------------------\e[0m"
+echo -e "\e[1;32mmkdir -p /etc/cni/net.d/ \e[0m"
+#echo -e "\e[1;32m/opt/cni/bin/flannel 检查是否已有该文件,有的话先删除,然后将主节点上的该文件复制到node节点上\e[0m"
+echo -e "\e[1;32m/etc/cni/net.d/10-flannel.conflist 检查是否已有该文件,有的话先删除,然后将主节点上的该文件复制到node节点上\e[0m"
+echo -e "\e[1;32mscp masterIP:/etc/cni/net.d/10-flannel.conflist /etc/cni/net.d/\e[0m"
 
 echo -e "\e[1;35m======================================================================================================================\e[0m"
 
@@ -8246,6 +8267,39 @@ echo -e "\e[1;35m===============================================================
 
 exec bash
 }
+
+
+
+
+install_kubernetes_radhat_master1322(){
+
+}
+
+
+
+install_kubernetes_radhat_node1322(){
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 reset_kubenetes(){
@@ -8263,6 +8317,23 @@ install_docker_compose(){
     docker-compose --version
     #curl -L https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-Linux-x86_64 -o /usr/local/bin/docker-compose
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 install_telnet(){
@@ -9569,7 +9640,7 @@ if [[ -n "${1-}" ]];then
 fi
 
 
-
+#####################################################################################################################################
 
 
 
@@ -9630,30 +9701,9 @@ done
 
 
 
+#####################################################################################################################################
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-install_kubernetes_radhat(){
+install_kubernetes_radhat1322(){
     while :;do
     echo -e "\E[$[RANDOM%7+31];1m"
     cat << EOF
@@ -9662,13 +9712,66 @@ install_kubernetes_radhat(){
 ************************************************************
 ************************************************************
 **********                                        **********
-**********              安装kubernetes            **********
-**********              for  radhat               **********
+**********                 1.32.2                 **********
 **********                                        **********
 **********             1.返回上一目录             **********
 **********                                        **********
-**********             2.安装master01(1.27.4)     **********
-**********             3.安装node(1.27.4)         **********
+**********             2.安装master01             **********
+**********             3.安装node                 **********
+**********                                        **********
+**********             0.退出                     **********
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+
+    echo -e "\E[0m"
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+
+case $Menu in
+
+1)     break
+       ;;
+
+2)     install_kubernetes_radhat_master1322
+       ;;
+
+3)     install_kubernetes_radhat_node1322
+       ;;
+
+0)     set_et
+       ;;
+
+*)      echo -e "\n\e[1;31m输入无效!请输入正确的选项!!!\e[0m" 
+        ;;
+esac
+done
+
+}
+
+
+
+
+#####################################################################################################################################
+
+install_kubernetes_radhat1274(){
+    while :;do
+    echo -e "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        **********
+**********                 1.27.4                 **********
+**********                                        **********
+**********             1.返回上一目录             **********
+**********                                        **********
+**********             2.安装master01             **********
+**********             3.安装node                 **********
 **********                                        **********
 **********             0.退出                     **********
 **********                                        **********
@@ -9708,6 +9811,7 @@ done
 
 
 
+#####################################################################################################################################
 
 
 
@@ -9715,7 +9819,181 @@ done
 
 
 
+install_kubernetes_radhat(){
+    while :;do
+    echo -e "\E[$[RANDOM%7+31];1m"
+    cat << EOF
 
+************************************************************
+************************************************************
+************************************************************
+**********                                        **********
+**********         安装kubernetes for  radhat     **********
+**********                                        **********
+**********             1.返回上一目录             **********
+**********                                        **********
+**********             2.1.27.4                   **********
+**********             3.1.32.2                   **********
+**********                                        **********
+**********             0.退出                     **********
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+
+    echo -e "\E[0m"
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+
+case $Menu in
+
+1)     break
+       ;;
+
+2)     install_kubernetes_radhat1274
+       ;;
+
+2)     install_kubernetes_radhat1322
+       ;;
+
+
+0)     set_et
+       ;;
+
+*)      echo -e "\n\e[1;31m输入无效!请输入正确的选项!!!\e[0m" 
+        ;;
+esac
+done
+
+}
+
+
+
+
+#####################################################################################################################################
+
+
+
+
+
+install_kubernetes_openEuler132(){
+    while :;do
+    echo -e "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        **********
+**********                 1.32                   **********
+**********                                        **********
+**********             1.返回上一目录             **********
+**********                                        **********
+**********             2.安装master01             **********
+**********             3.安装node                 **********
+**********                                        **********
+**********             0.退出                     **********
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+
+    echo -e "\E[0m"
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+
+case $Menu in
+
+1)     break
+       ;;
+
+2)     install_kubernetes_openEuler_master132
+       ;;
+
+3)     install_kubernetes_openEuler_node132
+       ;;
+
+0)     set_et
+       ;;
+
+*)      echo -e "\n\e[1;31m输入无效!请输入正确的选项!!!\e[0m" 
+        ;;
+esac
+done
+
+}
+
+
+
+
+
+
+
+#####################################################################################################################################
+
+
+
+
+
+
+
+install_kubernetes_openEuler(){
+    while :;do
+    echo -e "\E[$[RANDOM%7+31];1m"
+    cat << EOF
+
+************************************************************
+************************************************************
+************************************************************
+**********                                        **********
+**********         安装kubernetes for  openEuler  **********
+**********                                        **********
+**********             1.返回上一目录             **********
+**********                                        **********
+**********             2.1.32                     **********
+**********                                        **********
+**********             0.退出                     **********
+**********                                        **********
+************************************************************
+************************************************************
+************************************************************
+
+
+EOF
+
+    echo -e "\E[0m"
+read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
+
+case $Menu in
+
+1)     break
+       ;;
+
+2)     install_kubernetes_openEuler132
+       ;;
+
+
+0)     set_et
+       ;;
+
+*)      echo -e "\n\e[1;31m输入无效!请输入正确的选项!!!\e[0m" 
+        ;;
+esac
+done
+
+}
+
+
+
+
+
+
+
+#####################################################################################################################################
 
 
 
@@ -9740,7 +10018,8 @@ install_kubernetes(){
 **********                                        **********
 **********             2.redhat                   **********
 **********             3.ubuntu                   **********
-**********             4.重置                     **********
+**********             4.openEuler                **********
+**********             5.重置                     **********
 **********                                        **********
 **********             0.退出                     **********
 **********                                        **********
@@ -9765,7 +10044,10 @@ case $Menu in
 3)     install_kubernetes_ubuntu
        ;;
 
-4)     reset_kubenetes
+4)     install_kubernetes_openEuler
+       ;;
+
+5)     reset_kubenetes
        ;;
   
 
@@ -9785,7 +10067,7 @@ done
 
 
 
-
+#####################################################################################################################################
 
 
 
