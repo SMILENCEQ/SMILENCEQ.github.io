@@ -8377,13 +8377,13 @@ exec bash
 
 
 install_kubernetes_radhat_master1322(){
-
+echo ''
 }
 
 
 
 install_kubernetes_radhat_node1322(){
-
+echo ''
 }
 
 
