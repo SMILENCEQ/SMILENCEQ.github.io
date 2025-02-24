@@ -7761,7 +7761,26 @@ else
     NETWORK_OK=true
 fi
 
+# 检测系统版本
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    SYSTEM_NAME=$ID
+    VERSION_ID=${VERSION_ID:-unknown}
+elif [ -f /etc/redhat-release ]; then
+    SYSTEM_NAME="centos"
+    if grep -q "release 6" /etc/redhat-release; then
+        VERSION_ID="6"
+    elif grep -q "release 7" /etc/redhat-release; then
+        VERSION_ID="7"
+    else
+        VERSION_ID="无法判断操作系统版本"
+    fi
+else
+    SYSTEM_NAME="无法判断操作系统名称"
+    VERSION_ID="无法判断操作系统版本"
+fi
 
+echo -e "\e[1;35m检测到系统为：$SYSTEM_NAME $VERSION_ID\e[0m"
 if $NETWORK_OK && [ "$SYSTEM_NAME" = "centos" ] && [ "$VERSION_ID" = "7" ]; then
     echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
     echo -e "\e[1;35mYUM源检测\e[0m"
@@ -7832,6 +7851,67 @@ EOF
 else
     echo -e "\e[1;33m当前系统不是 CentOS 7 或网络不通，跳过 YUM 源更换。\e[0m"
 fi
+
+
+
+if $NETWORK_OK; then
+
+echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
+echo -e "\e[1;35m安装软件\e[0m"
+echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
+
+yum clean all
+yum makecache
+
+software=("lrzsz"
+        "vim"
+        "tree"
+        "wget"
+        "tcpdump"
+        "psmisc"
+        "rsync"
+        "mlocate"
+        "bzip2"
+        "zip"
+        "unzip"
+        "lsof"
+        "telnet"
+        "libpcap"
+        "tar"
+        "sysstat"
+        "python"
+        "ntpdate"
+        "pciutils-libs"
+        "pciutils"
+        "libtalloc"
+        "net-tools"
+        "httpd-tools"
+        "bash-completion"
+        "libpcap-devel"
+        "libtalloc-devel"
+        "bridge-utils.x86_64"
+        )
+
+
+    for i in ${software[@]}
+    do
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+            fi
+        fi
+
+    done
+
+else
+    echo -e "\e[1;31m"网络不通,不进行linux工具安装"\e[0m";
+    
+fi
+
 
 
 echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
@@ -8086,7 +8166,26 @@ else
     NETWORK_OK=true
 fi
 
+# 检测系统版本
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    SYSTEM_NAME=$ID
+    VERSION_ID=${VERSION_ID:-unknown}
+elif [ -f /etc/redhat-release ]; then
+    SYSTEM_NAME="centos"
+    if grep -q "release 6" /etc/redhat-release; then
+        VERSION_ID="6"
+    elif grep -q "release 7" /etc/redhat-release; then
+        VERSION_ID="7"
+    else
+        VERSION_ID="无法判断操作系统版本"
+    fi
+else
+    SYSTEM_NAME="无法判断操作系统名称"
+    VERSION_ID="无法判断操作系统版本"
+fi
 
+echo -e "\e[1;35m检测到系统为：$SYSTEM_NAME $VERSION_ID\e[0m"
 if $NETWORK_OK && [ "$SYSTEM_NAME" = "centos" ] && [ "$VERSION_ID" = "7" ]; then
     echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
     echo -e "\e[1;35mYUM源检测\e[0m"
@@ -8157,6 +8256,67 @@ EOF
 else
     echo -e "\e[1;33m当前系统不是 CentOS 7 或网络不通，跳过 YUM 源更换。\e[0m"
 fi
+
+
+
+if $NETWORK_OK; then
+
+echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
+echo -e "\e[1;35m安装软件\e[0m"
+echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
+
+yum clean all
+yum makecache
+
+software=("lrzsz"
+        "vim"
+        "tree"
+        "wget"
+        "tcpdump"
+        "psmisc"
+        "rsync"
+        "mlocate"
+        "bzip2"
+        "zip"
+        "unzip"
+        "lsof"
+        "telnet"
+        "libpcap"
+        "tar"
+        "sysstat"
+        "python"
+        "ntpdate"
+        "pciutils-libs"
+        "pciutils"
+        "libtalloc"
+        "net-tools"
+        "httpd-tools"
+        "bash-completion"
+        "libpcap-devel"
+        "libtalloc-devel"
+        "bridge-utils.x86_64"
+        )
+
+
+    for i in ${software[@]}
+    do
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+            fi
+        fi
+
+    done
+
+else
+    echo -e "\e[1;31m"网络不通,不进行linux工具安装"\e[0m";
+    
+fi
+
 
 
 echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
