@@ -69,7 +69,7 @@ color () {
 
 ##########################################
 ## Starting
-CshVersion=v4.8.1
+CshVersion=v4.8.2
 DATETIME1=2025-02-24
 echo  "============================================================"
 echo -e "\e[1;$[RANDOM%7+31]m
@@ -7746,9 +7746,6 @@ echo -e "\e[1;35m安装kubernetes1.27.4版本\e[0m"
 echo -e "\e[1;35m本次安装写入内容为一主两从模式\e[0m"
 echo -e "\e[1;35m需要提前准备runc.amd64,kube-flannel.yml,cri-dockerd-0.3.1-3.el7.x86_64.rpm文件,自动下载可能无法下载\e[0m"
 echo -e "\e[1;35m======================================================================================================================================\e[0m"
-
-
-
 if [ $ID = 'centos' -o $ID = 'rocky' ];then
     echo -e "\e[1;32m检测系统为centos/rocky允许执行\e[0m"
 else
@@ -7756,65 +7753,116 @@ else
     exit
 fi
 
-#echo -e "\e[1;32m配置yum源\e[0m"
-#[ ! -d /data/bak ] && mkdir -p /data/bak
+if ! ping -c 5 114.114.114.114 > /dev/null && ! ping -c 5 8.8.8.8 > /dev/null && ! ping -c 5 www.baidu.com > /dev/null; then
+    echo -e "\e[1;31m网络不通，将跳过相关网络依赖步骤。\e[0m"
+    NETWORK_OK=false
+else
+    echo -e "\e[1;32m网络正常\e[0m"
+    NETWORK_OK=true
+fi
 
-#判断文件夹是否有文件
-#    if [ "`ls -A /etc/yum.repos.d/`" != "" ];then
-#        mv /etc/yum.repos.d/*  /data/bak
-#    else
-#        echo ""
-#    fi
 
-#[ -d /mnt/cdrom ] || mkdir /mnt/cdrom
-#mount /dev/sr0 /mnt/cdrom
+if $NETWORK_OK && [ "$SYSTEM_NAME" = "centos" ] && [ "$VERSION_ID" = "7" ]; then
+    echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
+    echo -e "\e[1;35mYUM源检测\e[0m"
+    echo -e "\e[1;35m========================================================================================================================================\e[0m"
     
 
-#cat > /etc/yum.repos.d/base.repo <<EOF
-#[base]
-#name=CentOS
-#baseurl=file:///mnt/cdrom/BaseOS
-#        https://mirror.tuna.tsinghua.edu.cn/centos/\$releasever/os/\$basearch/
-#        https://mirrors.huaweicloud.com/centos/\$releasever/os/\$basearch/
-#        https://mirrors.cloud.tencent.com/centos/\$releasever/os/\$basearch/
-#        https://mirrors.aliyun.com/centos/\$releasever/os/\$basearch/
-#gpgcheck=0
-
-#[extras]
-#name=extras
-#baseurl=https://mirror.tuna.tsinghua.edu.cn/centos/\$releasever/extras/\$basearch
-#        https://mirrors.huaweicloud.com/centos/\$releasever/extras/\$basearch
-#        https://mirrors.cloud.tencent.com/centos/\$releasever/extras/\$basearch
-#        https://mirrors.aliyun.com/centos/\$releasever/extras/\$basearch
-#       
-#gpgcheck=0
-#enabled=1
 
 
-#[epel]
-#name=EPEL
-#baseurl=https://mirror.tuna.tsinghua.edu.cn/epel/\$releasever/\$basearch
-#        https://mirrors.cloud.tencent.com/epel/\$releasever/\$basearch/
-#        https://mirrors.huaweicloud.com/epel/\$releasever/\$basearch 
-#        https://mirrors.cloud.tencent.com/epel/\$releasever/\$basearch
-#        http://mirrors.aliyun.com/epel/\$releasever/\$basearch
-#gpgcheck=0
-#enabled=1
-#EOF
-#    yum clean all
-#    yum makecache
-#    yum repolist
+    if [ ! -d /data/bak ];then
+        mkdir -p /data/bak; echo "新建目录/data/bak"
+    else
+        echo "目录 /data/bak 已存在。"
+    fi
+#判断文件夹是否有文件
+    if [ "$(ls -A /etc/yum.repos.d/ 2>/dev/null)" ]; then
+        echo -e "\e[1;35m检测到旧的 YUM 源文件，备份到 /data/bak。\e[0m"
+        mv /etc/yum.repos.d/*  /data/bak || { echo "备份失败！"; exit 1; }
+    else
+        echo -e "\e[1;33m未检测到 YUM 源文件。\e[0m"
+    fi
+    echo -e "\e[1;35m写入新的base和epel\e[0m"
+    cat > /etc/yum.repos.d/base.repo <<'EOF'
+[base]
+name=CentOS
+baseurl=https://mirror.tuna.tsinghua.edu.cn/centos/\$releasever/os/\$basearch/
+        https://mirrors.huaweicloud.com/centos/\$releasever/os/\$basearch/
+        https://mirrors.cloud.tencent.com/centos/\$releasever/os/\$basearch/
+        https://mirrors.aliyun.com/centos/\$releasever/os/\$basearch/
+gpgcheck=0
+
+[extras]
+name=extras
+baseurl=https://mirror.tuna.tsinghua.edu.cn/centos/\$releasever/extras/\$basearch
+        https://mirrors.huaweicloud.com/centos/\$releasever/extras/\$basearch
+        https://mirrors.cloud.tencent.com/centos/\$releasever/extras/\$basearch
+        https://mirrors.aliyun.com/centos/\$releasever/extras/\$basearch
+       
+gpgcheck=0
+enabled=1
+
+
+[epel]
+name=EPEL
+baseurl=https://mirror.tuna.tsinghua.edu.cn/epel/\$releasever/\$basearch
+        https://mirrors.cloud.tencent.com/epel/\$releasever/\$basearch/
+        https://mirrors.huaweicloud.com/epel/\$releasever/\$basearch 
+        https://mirrors.cloud.tencent.com/epel/\$releasever/\$basearch
+        http://mirrors.aliyun.com/epel/\$releasever/\$basearch
+gpgcheck=0
+enabled=1
+EOF
+
+
+    cat > /etc/yum.repos.d/epel.repo <<'EOF'
+[epel]
+name=epel
+baseurl=https://mirrors.aliyun.com/epel/\$releasever/x86_64/
+        https://mirrors.tuna.tsinghua.edu.cn/epel/7/x86_64/
+        https://mirrors.ustc.edu.cn/epel/7/x86_64/
+gpgcheck=0
+EOF
 
 
 
-#cat >> /etc/fstab << EOF
-#/dev/sr0               /mnt/cdrom              iso9660  defaults        0 0
-#EOF
-
-#[ $? -eq 0 ] && color 已配置 0 || { color 写入失败 1;exit; }
 
 
-echo -e "\e[1;32m=====================================关闭swap=====================================\e[0m"
+    echo -e "\e[1;35mYUM 源已成功更换。\e[0m"
+else
+    echo -e "\e[1;33m当前系统不是 CentOS 7 或网络不通，跳过 YUM 源更换。\e[0m"
+fi
+
+
+echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
+echo -e "\e[1;35m关闭firewalld\e[0m"
+echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
+Firewalldstatus=`systemctl status firewalld | grep -o active`
+if [[ ${Firewalldstatus} == "acticve" ]];then
+    systemctl disable --now firewalld
+    [ $? -eq 0 ] && echo -e "\e[1;35mfirewalld关闭成功\e[0m"|| echo -e "\e[1;31m firewalld关闭失败 \e[0m"
+else
+    echo -e "\e[1;35mfirewalld已经是关闭状态\e[0m"
+fi
+
+
+echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
+echo -e "\e[1;35m关闭SELINUX\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+
+SELINUXstatus=`getenforce`
+if [[ ${SELINUXstatus} == "Enforcing" ]];then
+    sed -i 's/SELINUX=enforcing/SELINUX=disabled/'    /etc/selinux/config
+    [ $? -eq 0 ] && echo -e "\e[1;35mselinux关闭成功\e[0m" || echo -e "\e[1;35mselinux关闭失败\e[0m"
+else
+    echo -e "\e[1;35mselinux已经是关闭状态\e[0m"
+fi
+
+
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+echo -e "\e[1;32m关闭swap\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+
 swapoff -a
 sed -i '/swap/s/^/#/' /etc/fstab
 [ $? -eq 0 ] && color "成功 " 0 || color "失败 " 1
@@ -7829,9 +7877,10 @@ sed -i '/swap/s/^/#/' /etc/fstab
 #ntpdate time2.aliyun.com
 # 加入到crontab
 #*/5 * * * * /usr/sbin/ntpdate time2.aliyun.com
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+echo -e "\e[1;32m修改主机名\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
 
-
-echo -e "\e[1;32m=====================================修改主机名=====================================\e[0m"
 IPAD=`hostname -I`
 echo -e "\e[1;35m检测到当前地址为: ${IPAD}\e[0m"
 #read -p "输入master主机名(例如k8s-master01):" HOSTNAME1
@@ -7863,10 +7912,10 @@ modprobe br_netfilter
 sysctl -p /etc/sysctl.d/kubernetes.conf
 [ $? -eq 0 ] && color "成功 " 0 || color "失败 " 1
 
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+echo -e "\e[1;32m配置ipvs功能\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
 
-
-
-echo -e "\e[1;32m=====================================配置ipvs功能=====================================\e[0m"
 yum -y install ipset ipvsadm
 cat > /etc/sysconfig/modules/ipvs.modules <<EOF
 modprobe -- ip_vs
@@ -7881,8 +7930,9 @@ chmod +x /etc/sysconfig/modules/ipvs.modules
 [ $? -eq 0 ] && color "成功 " 0 || color "失败 " 1
 
 
-
-echo -e "\e[1;32m=====================================安装Docker容器=====================================\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+echo -e "\e[1;32m安装Docker容器\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
 curl -o /etc/yum.repos.d/CentOS-Base.repo https://mirrors.aliyun.com/repo/Centos-7.repo
 wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo
 yum makecache
@@ -7910,9 +7960,9 @@ systemctl enable --now docker
 [ $? -eq 0 ] && color "成功 " 0 || color "失败 " 1
 
 
-
-echo -e "\e[1;32m=====================================安装cri-dockerd-0.3.1插件=====================================\e[0m"
-
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+echo -e "\e[1;32m安装cri-dockerd-0.3.1插件\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
 if [ -e cri-dockerd-0.3.1-3.el7.x86_64.rpm ];then
     echo -e "\e[1;35m 文件已存在，开始安装\e[0m"
 else
@@ -7935,9 +7985,9 @@ systemctl enable --now docker cri-docker
 
 
 
-
-echo -e "\e[1;32m======================配置国内yum源，安装 kubeadm、kubelet、kubectl============================\e[0m"
-
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+echo -e "\e[1;32m配置国内yum源，安装 kubeadm、kubelet、kubectl\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
 
 cat <<EOF > /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
@@ -7953,9 +8003,9 @@ systemctl enable kubelet.service --now
 
 [ $? -eq 0 ] && color "成功 " 0 || color "失败 " 1
 
-
-echo -e "\e[1;32m=====================================安装runc-1.1.10=====================================\e[0m"
-
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+echo -e "\e[1;32m安装runc-1.1.10\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
 
 if [ -e runc.amd64 ];then
     echo -e "\e[1;35m 文件已存在，开始安装\e[0m"
@@ -7975,7 +8025,11 @@ sudo install -m 755 runc.amd64  /usr/local/bin/runc
 runc -v
 systemctl enable --now containerd
 
-echo -e "\e[1;32m=====================================初始化kubernetes=====================================\e[0m"
+
+
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+echo -e "\e[1;32m初始化kubernetes\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
 kubeadm init --node-name=k8s-master01 --image-repository=registry.aliyuncs.com/google_containers --cri-socket=unix:///var/run/cri-dockerd.sock --apiserver-advertise-address=${IP1} --pod-network-cidr=10.244.0.0/16 --service-cidr=10.96.0.0/12
 
 mkdir -p $HOME/.kube
@@ -7986,8 +8040,9 @@ sudo iptables -I INPUT -p tcp --dport 6443 -j ACCEPT
 
 
 
-
-echo -e "\e[1;32m=====================================部署flannel=====================================\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+echo -e "\e[1;32m部署flannel\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
 if [ -e kube-flannel.yml ];then
     echo -e "\e[1;35m 文件已存在，开始安装\e[0m"
 else
@@ -8023,64 +8078,112 @@ else
     exit
 fi
 
+if ! ping -c 5 114.114.114.114 > /dev/null && ! ping -c 5 8.8.8.8 > /dev/null && ! ping -c 5 www.baidu.com > /dev/null; then
+    echo -e "\e[1;31m网络不通，将跳过相关网络依赖步骤。\e[0m"
+    NETWORK_OK=false
+else
+    echo -e "\e[1;32m网络正常\e[0m"
+    NETWORK_OK=true
+fi
 
 
-#echo -e "\e[1;32m配置yum源\e[0m"
-#[ ! -d /data/bak ] && mkdir -p /data/bak
-
-#判断文件夹是否有文件
-#    if [ "`ls -A /etc/yum.repos.d/`" != "" ];then
-#        mv /etc/yum.repos.d/*  /data/bak
-#    else
-#        echo ""
-#    fi
-
-#[ -d /mnt/cdrom ] || mkdir /mnt/cdrom
-#mount /dev/sr0 /mnt/cdrom
+if $NETWORK_OK && [ "$SYSTEM_NAME" = "centos" ] && [ "$VERSION_ID" = "7" ]; then
+    echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
+    echo -e "\e[1;35mYUM源检测\e[0m"
+    echo -e "\e[1;35m========================================================================================================================================\e[0m"
     
 
-#cat > /etc/yum.repos.d/base.repo <<EOF
-#[base]
-#name=CentOS
-#baseurl=file:///mnt/cdrom/BaseOS
-#        https://mirror.tuna.tsinghua.edu.cn/centos/\$releasever/os/\$basearch/
-#        https://mirrors.huaweicloud.com/centos/\$releasever/os/\$basearch/
-#        https://mirrors.cloud.tencent.com/centos/\$releasever/os/\$basearch/
-#        https://mirrors.aliyun.com/centos/\$releasever/os/\$basearch/
-#gpgcheck=0
-
-#[extras]
-#name=extras
-#baseurl=https://mirror.tuna.tsinghua.edu.cn/centos/\$releasever/extras/\$basearch
-#        https://mirrors.huaweicloud.com/centos/\$releasever/extras/\$basearch
-#        https://mirrors.cloud.tencent.com/centos/\$releasever/extras/\$basearch
-#        https://mirrors.aliyun.com/centos/\$releasever/extras/\$basearch
-#       
-#gpgcheck=0
-#enabled=1
 
 
-#[epel]
-#name=EPEL
-#baseurl=https://mirror.tuna.tsinghua.edu.cn/epel/\$releasever/\$basearch
-#        https://mirrors.cloud.tencent.com/epel/\$releasever/\$basearch/
-#        https://mirrors.huaweicloud.com/epel/\$releasever/\$basearch 
-#        https://mirrors.cloud.tencent.com/epel/\$releasever/\$basearch
-#        http://mirrors.aliyun.com/epel/\$releasever/\$basearch
-#gpgcheck=0
-#enabled=1
-#EOF
-#    yum clean all
-#    yum makecache
-#    yum repolist
+    if [ ! -d /data/bak ];then
+        mkdir -p /data/bak; echo "新建目录/data/bak"
+    else
+        echo "目录 /data/bak 已存在。"
+    fi
+#判断文件夹是否有文件
+    if [ "$(ls -A /etc/yum.repos.d/ 2>/dev/null)" ]; then
+        echo -e "\e[1;35m检测到旧的 YUM 源文件，备份到 /data/bak。\e[0m"
+        mv /etc/yum.repos.d/*  /data/bak || { echo "备份失败！"; exit 1; }
+    else
+        echo -e "\e[1;33m未检测到 YUM 源文件。\e[0m"
+    fi
+    echo -e "\e[1;35m写入新的base和epel\e[0m"
+    cat > /etc/yum.repos.d/base.repo <<'EOF'
+[base]
+name=CentOS
+baseurl=https://mirror.tuna.tsinghua.edu.cn/centos/\$releasever/os/\$basearch/
+        https://mirrors.huaweicloud.com/centos/\$releasever/os/\$basearch/
+        https://mirrors.cloud.tencent.com/centos/\$releasever/os/\$basearch/
+        https://mirrors.aliyun.com/centos/\$releasever/os/\$basearch/
+gpgcheck=0
+
+[extras]
+name=extras
+baseurl=https://mirror.tuna.tsinghua.edu.cn/centos/\$releasever/extras/\$basearch
+        https://mirrors.huaweicloud.com/centos/\$releasever/extras/\$basearch
+        https://mirrors.cloud.tencent.com/centos/\$releasever/extras/\$basearch
+        https://mirrors.aliyun.com/centos/\$releasever/extras/\$basearch
+       
+gpgcheck=0
+enabled=1
+
+
+[epel]
+name=EPEL
+baseurl=https://mirror.tuna.tsinghua.edu.cn/epel/\$releasever/\$basearch
+        https://mirrors.cloud.tencent.com/epel/\$releasever/\$basearch/
+        https://mirrors.huaweicloud.com/epel/\$releasever/\$basearch 
+        https://mirrors.cloud.tencent.com/epel/\$releasever/\$basearch
+        http://mirrors.aliyun.com/epel/\$releasever/\$basearch
+gpgcheck=0
+enabled=1
+EOF
+
+
+    cat > /etc/yum.repos.d/epel.repo <<'EOF'
+[epel]
+name=epel
+baseurl=https://mirrors.aliyun.com/epel/\$releasever/x86_64/
+        https://mirrors.tuna.tsinghua.edu.cn/epel/7/x86_64/
+        https://mirrors.ustc.edu.cn/epel/7/x86_64/
+gpgcheck=0
+EOF
 
 
 
-#cat >> /etc/fstab << EOF
-#/dev/sr0               /mnt/cdrom              iso9660  defaults        0 0
-#EOF
 
-#[ $? -eq 0 ] && color 已配置 0 || { color 写入失败 1;exit; }
+
+    echo -e "\e[1;35mYUM 源已成功更换。\e[0m"
+else
+    echo -e "\e[1;33m当前系统不是 CentOS 7 或网络不通，跳过 YUM 源更换。\e[0m"
+fi
+
+
+echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
+echo -e "\e[1;35m关闭firewalld\e[0m"
+echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
+Firewalldstatus=`systemctl status firewalld | grep -o active`
+if [[ ${Firewalldstatus} == "acticve" ]];then
+    systemctl disable --now firewalld
+    [ $? -eq 0 ] && echo -e "\e[1;35mfirewalld关闭成功\e[0m"|| echo -e "\e[1;31m firewalld关闭失败 \e[0m"
+else
+    echo -e "\e[1;35mfirewalld已经是关闭状态\e[0m"
+fi
+
+
+echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
+echo -e "\e[1;35m关闭SELINUX\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+
+SELINUXstatus=`getenforce`
+if [[ ${SELINUXstatus} == "Enforcing" ]];then
+    sed -i 's/SELINUX=enforcing/SELINUX=disabled/'    /etc/selinux/config
+    [ $? -eq 0 ] && echo -e "\e[1;35mselinux关闭成功\e[0m" || echo -e "\e[1;35mselinux关闭失败\e[0m"
+else
+    echo -e "\e[1;35mselinux已经是关闭状态\e[0m"
+fi
+
+
 
 
 echo -e "\e[1;32m关闭swap\e[0m"
@@ -8099,8 +8202,9 @@ sed -i '/swap/s/^/#/' /etc/fstab
 # 加入到crontab
 #*/5 * * * * /usr/sbin/ntpdate time2.aliyun.com
 
-
-echo -e "\e[1;32m=====================================================修改主机名==================================================\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+echo -e "\e[1;32m修改主机名\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
 IPAD=`hostname -I`
 echo -e "\e[1;35m检测到当前地址为: ${IPAD}\e[0m"
 #read -p "输入master主机名(例如k8s-master01):" HOSTNAME1
@@ -8119,8 +8223,9 @@ ${IP2} k8s-node${HOSTNAME2}
 ${IP3} k8s-node${HOSTNAME3}
 EOF
 
-
-echo -e "\e[1;32m===================================修改Linux内核参数，添加网桥过滤器和地址转发功能===================================\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+echo -e "\e[1;32m修改Linux内核参数，添加网桥过滤器和地址转发功能\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
 cat >> /etc/sysctl.d/kubernetes.conf <<EOF
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
@@ -8204,9 +8309,9 @@ systemctl enable --now docker cri-docker
 
 
 
-echo -e "\e[1;35m============================================================================================================================================\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
 echo -e "\e[1;32m配置国内yum源，安装 kubeadm、kubelet、kubectl\e[0m"
-
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
 
 cat <<EOF > /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
@@ -8223,9 +8328,9 @@ systemctl enable kubelet.service --now
 [ $? -eq 0 ] && color "成功 " 0 || color "失败 " 1
 
 
-echo -e "\e[1;35m==============================================================================================================================================\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
 echo -e "\e[1;32m安装runc-1.1.10\e[0m"
-
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
 
 if [ -e runc.amd64 ];then
     echo -e "\e[1;35m 文件已存在，开始安装\e[0m"
