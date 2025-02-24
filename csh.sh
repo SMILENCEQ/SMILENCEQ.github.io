@@ -8377,13 +8377,13 @@ exec bash
 
 
 install_kubernetes_radhat_master1322(){
-echo ''
+echo 'load'
 }
 
 
 
 install_kubernetes_radhat_node1322(){
-echo ''
+echo 'load'
 }
 
 
@@ -9960,7 +9960,7 @@ case $Menu in
 2)     install_kubernetes_radhat1274
        ;;
 
-2)     install_kubernetes_radhat1322
+3)     install_kubernetes_radhat1322
        ;;
 
 
