@@ -1,7 +1,7 @@
 #!/bin/bash
 #********************************************************************
 #Author:       HEhandsome
-#Date：        2025-02-24
+#Date：        2025-02-25
 #FileName：    csh.sh
 #BLOG:         https://www.cnblogs.com/smlience
 #Description： 路漫漫其修远兮，吾将上下而求索
@@ -69,8 +69,8 @@ color () {
 
 ##########################################
 ## Starting
-CshVersion=v4.8.4
-DATETIME1=2025-02-24
+CshVersion=v4.8.5
+DATETIME1=2025-02-25
 echo  "============================================================"
 echo -e "\e[1;$[RANDOM%7+31]m
 
@@ -7886,6 +7886,7 @@ software=("lrzsz"
         "libtalloc"
         "net-tools"
         "httpd-tools"
+        "iptables-services"
         "bash-completion"
         "libpcap-devel"
         "libtalloc-devel"
@@ -8104,9 +8105,11 @@ sudo install -m 755 runc.amd64  /usr/local/bin/runc
 [ $? -eq 0 ] && color "成功 " 0 || color "失败 " 1
 runc -v
 systemctl enable --now containerd
-
-
-
+systemctl enable --now iptables
+sudo iptables -I INPUT -p tcp --dport 6443 -j ACCEPT
+sudo iptables -I INPUT -p tcp --dport 10250 -j ACCEPT
+iptables-save > /etc/sysconfig/iptables
+systemctl restart iptables
 echo -e "\e[1;35m========================================================================================================================================\e[0m"
 echo -e "\e[1;32m初始化kubernetes\e[0m"
 echo -e "\e[1;35m========================================================================================================================================\e[0m"
@@ -8116,7 +8119,7 @@ mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
-sudo iptables -I INPUT -p tcp --dport 6443 -j ACCEPT
+
 
 
 
@@ -8291,6 +8294,7 @@ software=("lrzsz"
         "libtalloc"
         "net-tools"
         "httpd-tools"
+        "iptables-services"
         "bash-completion"
         "libpcap-devel"
         "libtalloc-devel"
@@ -8537,7 +8541,409 @@ exec bash
 
 
 install_kubernetes_radhat_master1322(){
-echo 'load'
+echo -e "\e[1;35m======================================================================================================================================\e[0m"
+echo -e "\e[1;35m安装kubernetes1.32.2版本\e[0m"
+echo -e "\e[1;35m本次安装写入内容为一主两从模式\e[0m"
+echo -e "\e[1;35m需要提前准备runc.amd64,kube-flannel.yml,cri-dockerd-0.3.1-3.el7.x86_64.rpm文件,自动下载可能无法下载\e[0m"
+echo -e "\e[1;35m======================================================================================================================================\e[0m"
+if [ $ID = 'centos' -o $ID = 'rocky' ];then
+    echo -e "\e[1;32m检测系统为centos/rocky允许执行\e[0m"
+else
+    echo -e "\e[1;31m系统不是centos/rocky系列,不可以执行此脚本\e[0m"
+    exit
+fi
+
+if ! ping -c 5 114.114.114.114 > /dev/null && ! ping -c 5 8.8.8.8 > /dev/null && ! ping -c 5 www.baidu.com > /dev/null; then
+    echo -e "\e[1;31m网络不通，将跳过相关网络依赖步骤。\e[0m"
+    NETWORK_OK=false
+else
+    echo -e "\e[1;32m网络正常\e[0m"
+    NETWORK_OK=true
+fi
+
+# 检测系统版本
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    SYSTEM_NAME=$ID
+    VERSION_ID=${VERSION_ID:-unknown}
+elif [ -f /etc/redhat-release ]; then
+    SYSTEM_NAME="centos"
+    if grep -q "release 6" /etc/redhat-release; then
+        VERSION_ID="6"
+    elif grep -q "release 7" /etc/redhat-release; then
+        VERSION_ID="7"
+    else
+        VERSION_ID="无法判断操作系统版本"
+    fi
+else
+    SYSTEM_NAME="无法判断操作系统名称"
+    VERSION_ID="无法判断操作系统版本"
+fi
+
+echo -e "\e[1;35m检测到系统为：$SYSTEM_NAME $VERSION_ID\e[0m"
+if $NETWORK_OK && [ "$SYSTEM_NAME" = "centos" ] && [ "$VERSION_ID" = "7" ]; then
+    echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
+    echo -e "\e[1;35mYUM源检测\e[0m"
+    echo -e "\e[1;35m========================================================================================================================================\e[0m"
+    
+
+
+
+    if [ ! -d /data/bak ];then
+        mkdir -p /data/bak; echo "新建目录/data/bak"
+    else
+        echo "目录 /data/bak 已存在。"
+    fi
+#判断文件夹是否有文件
+    if [ "$(ls -A /etc/yum.repos.d/ 2>/dev/null)" ]; then
+        echo -e "\e[1;35m检测到旧的 YUM 源文件，备份到 /data/bak。\e[0m"
+        mv /etc/yum.repos.d/*  /data/bak || { echo "备份失败！"; exit 1; }
+    else
+        echo -e "\e[1;33m未检测到 YUM 源文件。\e[0m"
+    fi
+    echo -e "\e[1;35m写入新的base和epel\e[0m"
+    cat > /etc/yum.repos.d/base.repo <<'EOF'
+[base]
+name=CentOS
+baseurl=https://mirror.tuna.tsinghua.edu.cn/centos/\$releasever/os/\$basearch/
+        https://mirrors.huaweicloud.com/centos/\$releasever/os/\$basearch/
+        https://mirrors.cloud.tencent.com/centos/\$releasever/os/\$basearch/
+        https://mirrors.aliyun.com/centos/\$releasever/os/\$basearch/
+gpgcheck=0
+
+[extras]
+name=extras
+baseurl=https://mirror.tuna.tsinghua.edu.cn/centos/\$releasever/extras/\$basearch
+        https://mirrors.huaweicloud.com/centos/\$releasever/extras/\$basearch
+        https://mirrors.cloud.tencent.com/centos/\$releasever/extras/\$basearch
+        https://mirrors.aliyun.com/centos/\$releasever/extras/\$basearch
+       
+gpgcheck=0
+enabled=1
+
+
+[epel]
+name=EPEL
+baseurl=https://mirror.tuna.tsinghua.edu.cn/epel/\$releasever/\$basearch
+        https://mirrors.cloud.tencent.com/epel/\$releasever/\$basearch/
+        https://mirrors.huaweicloud.com/epel/\$releasever/\$basearch 
+        https://mirrors.cloud.tencent.com/epel/\$releasever/\$basearch
+        http://mirrors.aliyun.com/epel/\$releasever/\$basearch
+gpgcheck=0
+enabled=1
+EOF
+
+
+    cat > /etc/yum.repos.d/epel.repo <<'EOF'
+[epel]
+name=epel
+baseurl=https://mirrors.aliyun.com/epel/\$releasever/x86_64/
+        https://mirrors.tuna.tsinghua.edu.cn/epel/7/x86_64/
+        https://mirrors.ustc.edu.cn/epel/7/x86_64/
+gpgcheck=0
+EOF
+
+
+
+
+
+    echo -e "\e[1;35mYUM 源已成功更换。\e[0m"
+else
+    echo -e "\e[1;33m当前系统不是 CentOS 7 或网络不通，跳过 YUM 源更换。\e[0m"
+fi
+
+
+
+if $NETWORK_OK; then
+
+echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
+echo -e "\e[1;35m安装软件\e[0m"
+echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
+
+yum clean all
+yum makecache
+
+software=("lrzsz"
+        "vim"
+        "tree"
+        "wget"
+        "tcpdump"
+        "psmisc"
+        "rsync"
+        "mlocate"
+        "bzip2"
+        "zip"
+        "unzip"
+        "lsof"
+        "telnet"
+        "libpcap"
+        "tar"
+        "sysstat"
+        "python"
+        "ntpdate"
+        "pciutils-libs"
+        "pciutils"
+        "libtalloc"
+        "net-tools"
+        "httpd-tools"
+        "iptables-services"
+        "bash-completion"
+        "libpcap-devel"
+        "libtalloc-devel"
+        "bridge-utils.x86_64"
+        )
+
+
+    for i in ${software[@]}
+    do
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+            fi
+        fi
+
+    done
+
+else
+    echo -e "\e[1;31m"网络不通,不进行linux工具安装"\e[0m";
+    
+fi
+
+
+
+echo -e "\n\e[1;35m=====================================================================================================================================\e[0m"
+echo -e "\e[1;35m关闭firewalld\e[0m"
+
+Firewalldstatus=`systemctl status firewalld | grep -o active`
+if [[ ${Firewalldstatus} == "acticve" ]];then
+    systemctl disable --now firewalld
+    [ $? -eq 0 ] && echo -e "\e[1;32mfirewalld关闭成功\e[0m"|| echo -e "\e[1;31m firewalld关闭失败 \e[0m"
+else
+    echo -e "\e[1;32mfirewalld已经是关闭状态\e[0m"
+fi
+
+
+echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
+echo -e "\e[1;35m关闭SELINUX\e[0m"
+
+
+SELINUXstatus=`getenforce`
+if [[ ${SELINUXstatus} == "Enforcing" ]];then
+    sed -i 's/SELINUX=enforcing/SELINUX=disabled/'    /etc/selinux/config
+    [ $? -eq 0 ] && echo -e "\e[1;35mselinux关闭成功\e[0m" || echo -e "\e[1;35mselinux关闭失败\e[0m"
+else
+    echo -e "\e[1;32mselinux已经是关闭状态\e[0m"
+fi
+
+
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+echo -e "\e[1;32m关闭swap\e[0m"
+
+
+swapoff -a
+sed -i '/swap/s/^/#/' /etc/fstab
+[ $? -eq 0 ] && color "成功 " 0 || color "失败 " 1
+
+
+
+#echo -e "\e[1;32m关闭防火墙\e[0m"
+#systemctl disable --now firewalld
+
+#echo -e "\e[1;32m时间同步\e[0m"
+#yum -y install ntpdate
+#ntpdate time2.aliyun.com
+# 加入到crontab
+#*/5 * * * * /usr/sbin/ntpdate time2.aliyun.com
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+echo -e "\e[1;32m修改主机名\e[0m"
+
+
+IPAD=`hostname -I`
+echo -e "\e[1;35m检测到当前地址为: ${IPAD}\e[0m"
+#read -p "输入master主机名(例如k8s-master01):" HOSTNAME1
+read -p "输入node01主机名位数(例如01):" HOSTNAME2
+read -p "输入node02主机名位数(例如02):" HOSTNAME3
+#read -p "修改当前主机名,输入位数(例如01,02):" HOSTNAME4
+hostnamectl set-hostname k8s-master01
+
+read -p "输入masterip:" IP1
+read -p "输入noed01ip:" IP2
+read -p "输入node02ip:" IP3
+
+cat <<EOF >> /etc/hosts
+${IP1} k8s-master01
+${IP2} k8s-node${HOSTNAME2}
+${IP3} k8s-node${HOSTNAME3}
+EOF
+
+
+echo -e "\e[1;32m修改Linux内核参数，添加网桥过滤器和地址转发功能\e[0m"
+cat >> /etc/sysctl.d/kubernetes.conf <<EOF
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+net.ipv4.ip_forward = 1
+EOF
+
+
+modprobe br_netfilter
+sysctl -p /etc/sysctl.d/kubernetes.conf
+[ $? -eq 0 ] && color "成功 " 0 || color "失败 " 1
+
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+echo -e "\e[1;32m配置ipvs功能\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+
+yum -y install ipset ipvsadm
+cat > /etc/sysconfig/modules/ipvs.modules <<EOF
+modprobe -- ip_vs
+modprobe -- ip_vs_rr
+modprobe -- ip_vs_wrr
+modprobe -- ip_vs_sh
+modprobe -- nf_conntrack_ipv4  
+EOF
+chmod +x /etc/sysconfig/modules/ipvs.modules 
+/etc/sysconfig/modules/ipvs.modules
+
+[ $? -eq 0 ] && color "成功 " 0 || color "失败 " 1
+
+
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+echo -e "\e[1;32m安装Docker容器\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+curl -o /etc/yum.repos.d/CentOS-Base.repo https://mirrors.aliyun.com/repo/Centos-7.repo
+wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo
+yum makecache
+yum install -y yum-utils
+
+
+yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+yum install docker-ce-20.10.6 docker-ce-cli-20.10.6 -y
+mkdir /etc/docker
+
+cat <<EOF > /etc/docker/daemon.json
+{
+"registry-mirrors": [
+"https://docker.m.daocloud.io","https://docker.anyhub.us.kg"
+],
+"exec-opts": ["native.cgroupdriver=systemd"],
+"log-driver": "json-file",
+"log-opts": {
+"max-size": "200m"
+},
+"storage-driver": "overlay2"
+}
+EOF
+systemctl enable --now docker 
+[ $? -eq 0 ] && color "成功 " 0 || color "失败 " 1
+
+
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+echo -e "\e[1;32m安装cri-dockerd-0.3.1插件\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+if [ -e cri-dockerd-0.3.1-3.el7.x86_64.rpm ];then
+    echo -e "\e[1;35m 文件已存在，开始安装\e[0m"
+else
+    echo -e "\e[1;31m开始下载\e[0m"
+    wget https://github.com/Mirantis/cri-dockerd/releases/download/v0.3.1/cri-dockerd-0.3.1-3.el7.x86_64.rpm
+    if [ $? -eq 0 ];then
+        echo -e "\e[1;32m下载成功\e[0m"
+    else
+        echo -e "\e[1;32m下载失败，检查下载链接\e[0m"
+        exit
+    fi
+fi
+#wget https://github.com/Mirantis/cri-dockerd/releases/download/v0.3.1/cri-dockerd-0.3.1-3.el7.x86_64.rpm
+rpm -ivh cri-dockerd-0.3.1-3.el7.x86_64.rpm
+sed -i "s/^ExecStart/#&/" /usr/lib/systemd/system/cri-docker.service
+sed -i '10iExecStart=/usr/bin/cri-dockerd --network-plugin=cni --pod-infra-container-image=registry.aliyuncs.com/google_containers/pause:3.7' /usr/lib/systemd/system/cri-docker.service
+systemctl daemon-reload && systemctl restart docker cri-docker.socket cri-docker
+systemctl enable --now docker cri-docker
+[ $? -eq 0 ] && color "成功 " 0 || color "失败 " 1
+
+
+
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+echo -e "\e[1;32m配置国内yum源，安装 kubeadm、kubelet、kubectl\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+
+cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://mirrors.aliyun.com/kubernetes-new/core/stable/v1.32/rpm/
+enabled=1
+gpgcheck=1
+gpgkey=https://mirrors.aliyun.com/kubernetes-new/core/stable/v1.32/rpm/repodata/repomd.xml.key
+EOF
+
+
+yum install -y kubelet-1.32.2 kubeadm-1.32.2 kubectl-1.32.2
+systemctl enable kubelet.service --now
+
+[ $? -eq 0 ] && color "成功 " 0 || color "失败 " 1
+
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+echo -e "\e[1;32m安装runc-1.1.10\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+
+if [ -e runc.amd64 ];then
+    echo -e "\e[1;35m 文件已存在，开始安装\e[0m"
+else
+    echo -e "\e[1;31m开始下载\e[0m"
+    wget https://github.com/opencontainers/runc/releases/download/v1.1.10/runc.amd64
+    if [ $? -eq 0 ];then
+        echo -e "\e[1;32m下载成功\e[0m"
+    else
+        echo -e "\e[1;32m下载失败，检查下载链接\e[0m"
+        exit
+    fi
+fi
+
+sudo install -m 755 runc.amd64  /usr/local/bin/runc
+[ $? -eq 0 ] && color "成功 " 0 || color "失败 " 1
+runc -v
+systemctl enable --now containerd
+systemctl enable --now iptables
+sudo iptables -I INPUT -p tcp --dport 6443 -j ACCEPT 
+sudo iptables -I INPUT -p tcp --dport 10250 -j ACCEPT
+iptables-save > /etc/sysconfig/iptables
+systemctl restart iptables
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+echo -e "\e[1;32m初始化kubernetes\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+kubeadm init --node-name=k8s-master01 --image-repository=registry.aliyuncs.com/google_containers --cri-socket=unix:///var/run/cri-dockerd.sock --apiserver-advertise-address=${IP1} --pod-network-cidr=10.244.0.0/16 --service-cidr=10.96.0.0/12
+
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+
+
+
+
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+echo -e "\e[1;32m部署flannel\e[0m"
+echo -e "\e[1;35m========================================================================================================================================\e[0m"
+if [ -e kube-flannel.yml ];then
+    echo -e "\e[1;35m 文件已存在，开始安装\e[0m"
+else
+    echo -e "\e[1;31m文件不存在，开始下载\e[0m"
+    wget https://github.com/flannel-io/flannel/releases/download/v0.22.0/kube-flannel.yml
+    if [ $? -eq 0 ];then
+        echo -e "\e[1;32m下载成功\e[0m"
+    else
+        echo -e "\e[1;32m下载失败，检查下载链接\e[0m"
+        exit
+    fi
+fi
+
+kubectl apply -f kube-flannel.yml
+
+exec bash
+
 }
 
 
