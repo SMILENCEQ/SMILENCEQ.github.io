@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 print('''
 Linux 运维脚本,基于csh.sh脚本进行Python重构
 重构时间:2025-02-26
