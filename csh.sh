@@ -1,7 +1,7 @@
 #!/bin/bash
 #********************************************************************
 #Author:       HEhandsome
-#Date：        2025-02-25
+#Date：        2025-03-12
 #FileName：    csh.sh
 #BLOG:         https://www.cnblogs.com/smlience
 #Description： 路漫漫其修远兮，吾将上下而求索
@@ -69,8 +69,8 @@ color () {
 
 ##########################################
 ## Starting
-CshVersion=v4.8.5
-DATETIME1=2025-02-25
+CshVersion=v4.8.6
+DATETIME1=2025-03-12
 echo  "============================================================"
 echo -e "\e[1;$[RANDOM%7+31]m
 
@@ -4358,7 +4358,9 @@ do
 done
 
 #更换cpam源
-sed -i  's#http://www.cpan.org/#https://mirror.tuna.tsinghua.edu.cn/CPAN/#' .cpan/CPAN/MyConfig.pm
+sed -i  's#http://www.cpan.org/#https://mirror.tuna.tsinghua.edu.cn/CPAN/#' .cpan/CPAN/
+
+
 
 
 cat > yes_file <<EOF
@@ -4888,7 +4890,7 @@ service sshd restart
 
 [ $? -eq 0 ] && echo -e "\e[1;35m                                                           [  OK  ] \e[0m" || { echo -e "\e[1;31m                false \e[0m";exit; }
 
-echo -e "\n\e[1;35m=================================配置开机项=================================\e[0m"
+echo -e "\n\e[1;35m==========================配置开机项=====================================\e[0m"
 
 chkconfig --add sshd
 chkconfig --level 2345 sshd on
@@ -5020,10 +5022,6 @@ fi
 echo -e "\e[1;35m=======================开始升级openssl==============================\e[0m"
 
 
-
-
-
-
 echo -e "\e[1;35m==========================安装依赖包================================\e[0m"
 
 
@@ -5031,8 +5029,8 @@ echo -e "\e[1;35m==========================安装依赖包======================
 software=(
     "gcc"
     "perl"
-    "zlib-devel"
     "make"
+    "zlib-devel"
     "perl-CPAN"
     "perl-IPC-Cmd"
     "pcre-devel"
@@ -5052,9 +5050,45 @@ do
 done
 
 
+echo -e "\e[1;35m==========================CPAN安装配置================================\e[0m"
+
+
+# 使用 timeout 命令运行 sudo cpan，忽略退出状态码
+timeout 1 sudo cpan || true
+
+# 自动执行 cpan 配置并生成 .cpan/CPAN/MyConfig.pm
+#echo -e "\n\n" | sudo cpan > /dev/null 2>&1
+
+
+
+# 后台运行 sudo cpan
+#sudo cpan &
+#CPAN_PID=$!
+
+# 等待 1 秒后终止 cpan 进程
+#sleep 1
+#kill -INT $CPAN_PID
+
+
+
+
+# 检查是否成功生成 MyConfig.pm
+if [ -f /root/.cpan/CPAN/MyConfig.pm ]; then
+    echo "MyConfig.pm 文件已成功生成。"
+    sed -i  's#http://www.cpan.org/#https://mirror.tuna.tsinghua.edu.cn/CPAN/#' .cpan/CPAN/MyConfig.pm
+else
+    echo "MyConfig.pm 文件生成失败。"
+fi
+
+
+
 
 #更换cpam源
-sed -i  's#http://www.cpan.org/#https://mirror.tuna.tsinghua.edu.cn/CPAN/#' .cpan/CPAN/MyConfig.pm
+#if [ -f /root/.cpan/CPAN/MyConfig.pm ];then 
+#    sed -i  's#http://www.cpan.org/#https://mirror.tuna.tsinghua.edu.cn/CPAN/#' .cpan/CPAN/MyConfig.pm
+#else
+#    echo ''
+#fi
 
 
 cat > yes_file <<EOF
@@ -5069,13 +5103,36 @@ cpan IPC::Cmd < yes_file
 
 rm yes_file
 
-echo -e "\e[1;35m==========================编译安装=======================================\e[0m"
+
+
+#echo -e "\e[1;5;33m警告!!!!!!!!!!\e[0m\n"
+#echo -e "\e[1;5;32m如果cpan报错下载失败是出现源的问题请在十秒内终止脚本手动执行修改源命令后再重新执行脚本\e[0m\n"
+#echo -e "\e[1;5;32m执行sudo cpan后直接退出,重新执行脚本即可 \e[0m\n"
+#echo -e "\e[1;5;32msed -i  \'s#http://www.cpan.org/#https://mirror.tuna.tsinghua.edu.cn/CPAN/#\'\e[0m\n"
+
+
+
+#for i in {10..1}
+#do
+#    echo -n "${i} "
+#    echo -ne "\r"
+#    sleep 1
+#done
+
+for i in {3..1}
+do
+    echo -n "${i} "
+    echo -ne "\r"
+    sleep 1
+done
+
+echo -e "\e[1;35m==========================openssl编译安装=======================================\e[0m"
 tar -zxvf /root/openssl-${OpensslVersion}.tar.gz
 cd /root/openssl-${OpensslVersion}
 ./config --prefix=/usr/local/ssl --openssldir=/usr/local/ssl shared zlib
 
 
-make && make install
+make -j$(nproc) && make install  || { echo -e "\e[1;31m编译或安装失败,执行make clean 重新编译\e[0m"; exit 1; } 
 
 echo "/usr/local/ssl/lib64" > /etc/ld.so.conf.d/openssl.conf
 ldconfig
@@ -5085,11 +5142,11 @@ cp /usr/local/ssl/bin/openssl /usr/bin/openssl
 ldconfig -v
 cd
 #查看版本 是否安装成功
-echo -e "\e[1;35m===============================升级后版本================================\e[0m"
+echo -e "\e[1;35m==========================升级后版本==========================================\e[0m"
 
 openssl version
 
-echo -e "\e[1;5;35m=======================================================================\e[0m"
+echo -e "\e[1;5;35m===========================================================================\e[0m"
 echo -e "\e[1;35m下面开始安装openssh,不想安装请在五秒内终止脚本\e[0m\n"
 
 for i in {5..1}
@@ -5099,20 +5156,23 @@ do
     sleep 1
 done
 
-echo -e "\e[1;35m=======================开始升级openssh==============================\e[0m"
 
 
 
 
+0
 
 
+for i in {3..1}
+do
+    echo -n "${i} "
+    echo -ne "\r"
+    sleep 1
+done
+echo -e "\e[1;35m========================开始升级openssh=====================================\e[0m"
 
 
-
-
-
-
-echo -e "\e[1;35m==========================安装依赖包=====================================\e[0m"
+echo -e "\e[1;35m==========================安装依赖包========================================\e[0m"
 
 software=("gcc"
     "gcc-c++"
@@ -5139,7 +5199,7 @@ do
         fi
 done
 
-echo -e "\e[1;35m===========================解压源文件====================================\e[0m"
+echo -e "\e[1;35m=========================解压源文件====================================\e[0m"
 tar zxf /root/zlib-${ZlibVersion}.tar.gz
 if [ -e /root/zlib-${ZlibVersion} ];then
     echo -e "\n\e[1;35mzlib解压成功\e[0m"
@@ -5169,7 +5229,7 @@ else
 echo -e "\n\e[1;35m开始编译\e[0m"
 cd /root/zlib-${ZlibVersion}/
 ./configure --prefix=/usr/local/zlib
-make && make install
+make -j$(nproc) && make install  || { echo -e "\e[1;31m编译或安装失败,执行make clean 重新编译\e[0m"; exit 1; } 
 [ $? -eq 0 ] && echo -e "\e[1;35m                                                            [  OK  ] \e[0m" || { echo -e "\e[1;31m                false \e[0m";exit; }
 fi
 
@@ -5188,6 +5248,7 @@ cd /root/openssh-${OpensshVersion}/
 fi
 
 echo -e "\e[1;35m======================备份旧文件，迁入新文件==============================\e[0m"                  
+echo -e "\e[1;32m备份文件在/data/opensshbak/\e[0m"  
 [ -d /data/opensshbak ] || mkdir -p /data/opensshbak/
 
 if [ -a /etc/ssh/sshd_config ];then
@@ -9525,7 +9586,12 @@ echo -e "\e[1;$[RANDOM%7+31]m===================================================
 echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
                  echo "2024-7-23 version:v4.7.23"
                  echo "增加升级openssl openssl更多版本"
-
+echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
+                 echo "2025-02-25 version:v4.8.5"
+                 echo "调整优化centos7.9一键部署kubernetes1.27.4版本"
+echo -e "\e[1;$[RANDOM%7+31]m=================================================================================================== \e[0m"
+                 echo "2025-3-12 version:v4.8.6"
+                 echo "修复centos7从openssl 1.0版本升级到3.3.1版本的一个问题"
 }
 
 re(){
