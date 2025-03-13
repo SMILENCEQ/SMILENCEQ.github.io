@@ -75,15 +75,19 @@ if $NETWORK_OK && [ "$SYSTEM_NAME" = "centos" ] && [ "$VERSION_ID" = "7" ]; then
 
 
 
-    [ ! -d /data/bak ] && { mkdir -p /data/bak; echo "目录 /data/bak 已创建。"; } || echo "目录 /data/bak 已存在。"
-
+    if [ ! -d /data/bak ];then
+        mkdir -p /data/bak; echo "新建目录/data/bak"
+    else
+        echo "目录 /data/bak 已存在。"
+    fi
 #判断文件夹是否有文件
     if [ "$(ls -A /etc/yum.repos.d/ 2>/dev/null)" ]; then
         echo -e "\e[1;35m检测到旧的 YUM 源文件，备份到 /data/bak。\e[0m"
         mv /etc/yum.repos.d/*  /data/bak || { echo "备份失败！"; exit 1; }
     else
-        echo -e "\e[1;33m未检测到旧的 YUM 源文件。\e[0m"
+        echo -e "\e[1;33m未检测到 YUM 源文件。\e[0m"
     fi
+    echo -e "\e[1;35m写入新的base和epel\e[0m"
     cat > /etc/yum.repos.d/base.repo <<'EOF'
 [base]
 name=CentOS
@@ -170,6 +174,7 @@ software=("lrzsz"
         "libtalloc"
         "net-tools"
         "httpd-tools"
+        "iptables-services"
         "bash-completion"
         "libpcap-devel"
         "libtalloc-devel"
@@ -204,11 +209,11 @@ fi
 sleep 2
 echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
 echo -e "\e[1;35m关闭firewalld\e[0m"
-echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
+
 Firewalldstatus=`systemctl status firewalld | grep -o active`
 if [[ ${Firewalldstatus} == "acticve" ]];then
     systemctl disable --now firewalld
-    [ $? -eq 0 ] && echo -e "\e[1;35mfirewalld关闭成功\e[0m"|| echo -e "\e[1;31m firewalld关闭失败 \e[0m"
+    [ $? -eq 0 ] && echo -e "\e[1;32mfirewalld关闭成功\e[0m"|| echo -e "\e[1;31m firewalld关闭失败 \e[0m"
 else
     echo -e "\e[1;35mfirewalld已经是关闭状态\e[0m"
 fi
@@ -217,7 +222,7 @@ sleep 2
 
 echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
 echo -e "\e[1;35m关闭openEuler的systemd-coredump.socket\e[0m"
-echo -e "\e[1;35m========================================================================================================================================\e[0m"
+
 
 if [ $ID = 'openEuler' ];then
     systemctl disable --now  systemd-coredump.socket
@@ -230,7 +235,7 @@ fi
 
 echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
 echo -e "\e[1;35m添加别名\e[0m"
-echo -e "\e[1;35m========================================================================================================================================\e[0m"
+
 
 echo -e "\n\e[1;35m添加的别名有：cdnet='cd /etc/sysconfig/network-scripts/'，vi='vim'\e[0m"
 
@@ -240,7 +245,7 @@ alias cdnet='cd /etc/sysconfig/network-scripts/'
 alias vi='vim'
 EOF
 
-[ $? -eq 0 ] && echo -e "\e[1;35m                                                            [  OK  ] \e[0m" || echo -e "\e[1;31m                false \e[0m"
+[ $? -eq 0 ] && echo -e "\e[1;32m                                                            [  OK  ] \e[0m" || echo -e "\e[1;31m                false \e[0m"
 
 else
     echo -e "\e[1;35m网络不通不修改别名\e[0m"
@@ -252,12 +257,12 @@ sleep 2
 
 echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
 echo -e "\e[1;35m关闭SELINUX\e[0m"
-echo -e "\e[1;35m========================================================================================================================================\e[0m"
+
 
 SELINUXstatus=`getenforce`
 if [[ ${SELINUXstatus} == "Enforcing" ]];then
     sed -i 's/SELINUX=enforcing/SELINUX=disabled/'    /etc/selinux/config
-    [ $? -eq 0 ] && echo -e "\e[1;35mselinux关闭成功\e[0m" || echo -e "\e[1;35mselinux关闭失败\e[0m"
+    [ $? -eq 0 ] && echo -e "\e[1;32mselinux关闭成功\e[0m" || echo -e "\e[1;31mselinux关闭失败\e[0m"
 else
     echo -e "\e[1;35mselinux已经是关闭状态\e[0m"
 fi
@@ -288,7 +293,7 @@ sysctl -p
 
 
 
-[ $? -eq 0 ] && echo -e "\e[1;35m                                                            [  OK  ] \e[0m" || echo -e "\e[1;31m                false \e[0m"
+[ $? -eq 0 ] && echo -e "\e[1;32m                                                            [  OK  ] \e[0m" || echo -e "\e[1;31m                false \e[0m"
 sleep 2
 
 
@@ -325,7 +330,7 @@ EOF
 
 source /etc/profile
 source /etc/bashrc
-[ $? -eq 0 ] && echo -e "\e[1;35m                                                            [  OK  ] \e[0m" || echo -e "\e[1;31m                false \e[0m"
+[ $? -eq 0 ] && echo -e "\e[1;32m                                                            [  OK  ] \e[0m" || echo -e "\e[1;31m                false \e[0m"
 
 #echo -e "\n\e[1;35m=============================================================修改主机名===============================================================\e[0m"
 #read -p "输入想要修改的主机名:" HOSTNAME
