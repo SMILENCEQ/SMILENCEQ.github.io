@@ -69,8 +69,8 @@ color () {
 
 ##########################################
 ## Starting
-CshVersion=v4.8.7
-DATETIME1=2025-03-20
+CshVersion=v4.9.0
+DATETIME1=2025-03-25
 echo  "============================================================"
 echo -e "\e[1;$[RANDOM%7+31]m
 
@@ -206,6 +206,24 @@ initialize_variables() {
             Date=`date +%Y%m%d%H%M%S`
             TARGET_HOST=`hostname -I`
             TARGET_PORT="22"
+            ;;
+        update_sshssl8)
+            OpensslVersion=3.4.0
+            SudoVersion=1.9.16p2
+            ZlibVersion=1.3.1
+            OpensslVersion1=`openssl version | awk  '{print $2}'`
+            OpensshVersion=9.9p1
+            Date=`date +%Y%m%d%H%M%S`
+            TARGET_HOST=`hostname -I`
+            TARGET_PORT="22"
+            ;;
+        update_sshssl10)
+            date=`date +%Y%m%d%H%M%S`
+            OpensslVersion=3.4.0
+            OpensshVersion=9.9p1
+            PerlVersion=5.36.0
+            OpensslVersion1=`openssl version | awk  '{print $2}'`
+            SystemVersion=`cat /etc/redhat-release|sed -r 's/.* ([0-9]+)\..*/\1/'`
             ;;
         *)
             echo "Unknown function: $1"
@@ -1518,6 +1536,256 @@ else
 fi
 
 }
+
+
+
+
+
+
+set_local_yum(){
+
+#echo -e "\e[1;35m系统检查\e[0m"
+#if [ -e /dev/sr0 ];then
+#    echo -e "\e[1;32msr0存在\e[0m"
+
+    # 检查是否有光盘挂载
+#    mount_point=$(mount | grep '/dev/sr0' | awk '{print $3}')
+#    if [ -n "$mount_point" ]; then
+#        echo "/dev/sr0 已挂载到 $mount_point"
+#        # 检查挂载点是否有ISO文件
+#        iso_files=$(find "$mount_point" -type f -name "*.iso" 2>/dev/null)
+#        if [ -n "$iso_files" ]; then
+#            echo "找到以下ISO文件:"
+#            echo "$iso_files"
+#        else
+#           echo "在 $mount_point 中没有找到ISO文件。"
+#        fi
+#    else
+#        echo "/dev/sr0 没有挂载。"
+#        # 尝试挂载到临时目录检查
+#       temp_mount=$(mktemp -d)
+#        if mount /dev/sr0 "$temp_mount" 2>/dev/null; then
+#            echo "临时挂载成功，检查ISO文件..."
+#            
+#            iso_files=$(find "$temp_mount" -type f -name "*.iso" 2>/dev/null)
+#            if [ -n "$iso_files" ]; then
+#                echo "找到以下ISO文件:"
+#                echo "$iso_files"
+#            else
+#                echo "在临时挂载点中没有找到ISO文件。"
+#            fi
+#            
+#            # 卸载
+#            umount "$temp_mount"
+#            rmdir "$temp_mount"
+#        else
+#            echo "无法挂载 /dev/sr0，可能没有光盘或光盘不可读。"
+#            rmdir "$temp_mount"
+#        fi
+#    fi
+#else
+#    echo -e "\e[1;31msr0不存在\e[0m"
+#    exit
+#fi
+
+
+#echo -e "\e[1;35m备份旧的yum源文件到/data/bak,挂载iso到/mnt/cdrom\e[0m"
+#[ ! -d /data/bak ] && mkdir -p /data/bak
+
+#判断文件夹是否有文件
+#if [ "`ls -A /etc/yum.repos.d/`" != "" ];then
+#    mv /etc/yum.repos.d/*  /data/bak/
+#else
+#    echo " \n"
+#fi
+
+
+
+# 挂载函数：统一处理挂载操作
+#mount_device() {
+#    local source="$1"
+#    local target="$2"
+#    local type="$3"
+
+#    echo "[INFO] 尝试挂载 $type: $source → $target"
+#    if sudo mount "$source" "$target" 2>/dev/null; then
+#        echo "[SUCCESS] 挂载成功！访问路径: $target"
+#        echo "内容列表:"
+#        ls -l "$target"
+#        return 0
+#    else
+#        echo "[ERROR] 挂载失败（请检查权限或介质有效性）"
+#        sudo rmdir "$target" 2>/dev/null
+#        return 1
+#    fi
+#}
+
+# 检查并挂载 /dev/sr0
+#if [ -b /dev/sr0 ]; then
+#    echo "[INFO] 检测到光驱设备: /dev/sr0"
+#    mount_dir="/mnt/cdrom"
+#    sudo mkdir -p "$mount_dir"
+#    if mount_device "/dev/sr0" "$mount_dir" "光驱"; then
+#        exit 0  # 挂载成功则退出
+#    fi
+#fi
+
+# 检查 /dev/ 下的 .iso 文件
+#echo "[INFO] 正在检查 /dev/ 下的ISO文件..."
+#iso_file=$(find /dev/ -maxdepth 1 -type f -name "*.iso" 2>/dev/null | head -n 1)
+
+#if [ -n "$iso_file" ]; then
+#    echo "[INFO] 找到ISO文件: $iso_file"
+#    mount_dir="/mnt/iso"
+#    sudo mkdir -p "$mount_dir"
+#    if mount_device "-o loop $iso_file" "$mount_dir" "ISO镜像"; then
+#        exit 0  # 挂载成功则退出
+#    fi
+#fi
+
+# 如果执行到这里说明全部失败
+#echo "[ERROR] 未找到可挂载的光驱或ISO文件！"
+#exit 1
+
+
+
+
+
+
+
+
+   
+
+
+
+#[ -d /mnt/cdrom ] || mkdir /mnt/cdrom
+#mount /dev/sr0 /mnt/cdrom
+
+#cat > /etc/yum.repos.d/base.repo <<EOF
+#[base]
+#name=Local YUM Repository
+#baseurl=file:///mnt/cdrom
+#enabled=1
+#gpgcheck=0
+#EOF
+
+
+#echo -e "\e[1;35m写入配置永久挂载\e[0m"
+
+#cat >> /etc/fstab << EOF
+#/dev/sr0               /mnt/cdrom              iso9660  defaults        0 0
+#EOF
+
+
+#yum clean all
+#yum makecache
+#yum repolist
+
+
+
+# 定义ISO查找和挂载函数
+find_and_mount_iso(){
+    echo -e "\n\e[1;35m查找可用iso文件....\e[0m"
+    for path in "/dev" "/tmp" "/opt" "/data"; do
+        iso_file=$(find "$path" -maxdepth 1 -type f -name "*.iso" 2>/dev/null | head -n 1)
+        if [ -n "$iso_file" ]; then
+            echo -e "\e[1;32m找到ISO文件: $iso_file\e[0m"
+            echo -e "\e[1;32m挂载 "$iso_file" 到 /mnt/cdrom\e[0m"
+            if sudo mount -o loop "$iso_file" /mnt/cdrom 2>/dev/null; then
+                echo -e "\e[1;32mISO挂载成功\e[0m"
+                echo "$(readlink -f "$iso_file")  /mnt/iso  iso9660  loop,ro,auto  0  0" | sudo tee -a /etc/fstab
+                return 0
+            else
+                echo -e "\e[1;31m挂载失败: $iso_file\e[0m"
+            fi
+        fi
+    done
+        echo -e "\e[1;33m没有找到可用iso文件,请手动上传iso文件到"/dev" "/tmp" "/opt"目录\e[0m"
+        exit
+}
+
+# 检查并挂载 /dev/sr0
+[ -d /mnt/cdrom ] || mkdir -p /mnt/cdrom
+if [ -b /dev/sr0 ];then
+    echo -e "\n\e[1;35m检测到光驱设备:/dev/sr0\e[0m"
+    echo -e "\e[1;35m挂载/dev/sr0到/mnt/cdrom\e[0m"
+    if sudo mount /dev/sr0 /mnt/cdrom;then
+        echo -e "\e[1;32m光驱挂载成功\e[0m"
+        echo  "/dev/sr0    /mnt/cdrom    iso9660    defaults    0 0"
+    else
+        echo -e "\n\e[1;31m光驱挂载失败，尝试查找ISO文件...\e[0m"
+        find_and_mount_iso || exit
+    fi
+else
+    echo -e "\n\e[1;33m没有检测到光驱设备:/dev/sr0\e[0m"
+    find_and_mount_iso || exit
+fi
+
+
+
+
+# 验证挂载是否成功
+if ! mountpoint -q /mnt/cdrom; then
+    echo -e "\n\e[1;31m严重错误：最终挂载验证失败\e[0m"
+    exit 1
+fi
+
+echo -e "\n\e[1;32m挂载验证通过\e[0m"
+echo -e "\e[1;35m挂载内容:\e[0m"
+ls -l /mnt/cdrom | head -n 10
+
+
+
+
+#判断文件夹是否有文件
+[ ! -d /data/bak ] && mkdir -p /data/bak
+
+
+if [ "`ls -A /etc/yum.repos.d/`" != "" ];then
+    mv /etc/yum.repos.d/*  /data/bak/
+else
+    echo " \n"
+fi
+cat > /etc/yum.repos.d/base.repo <<'EOF'
+[base]
+name=Local YUM Repository
+baseurl=file:///mnt/cdrom
+enabled=1
+gpgcheck=0
+EOF
+
+
+
+
+# 重建YUM缓存
+echo -e "\n\e[1;35m重建YUM缓存...\e[0m"
+yum clean all
+yum makecache
+yum repolist
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
 set_ali(){
 
 DIRECTORY="/etc/yum.repod.d"
@@ -3970,7 +4238,7 @@ ssh -V
 
 update_sshssl1(){
 initialize_variables "update_sshssl1"
-log "Executing update_sshssl1"
+#log "Executing update_sshssl1"
 echo -e "\e[1;35m========================================================================\e[0m"
 echo -e "\e[1;35m现在已安装的版本\e[0m"
 openssl version
@@ -4066,6 +4334,7 @@ do
                 echo -e "$i\t\e[1;35m安装成功\e[0m"
             else
                 echo -e "$i\t\e[1;31m安装失败\e[0m"
+                exit
             fi
         fi
 done
@@ -4102,12 +4371,12 @@ echo -e "\e[1;35m===========================编译openssl=======================
 cd /root/openssl-${OpensslVersion}
 
 ./config --prefix=/usr/local/openssl -d shared
-make
+#make
 #执行失败的话执行make clean清除make信息
 #[ $? -eq 0 ] || make clean
-sleep 1
-make install
-
+#sleep 1
+#make install
+make -j$(nproc) && make install
 
 echo -e "\e[1;35m============================备份旧文件===================================\e[0m"
 #备份旧的
@@ -4122,7 +4391,12 @@ echo "/usr/local/openssl/lib" >> /etc/ld.so.conf
 #验证：ldconfig -v|grep ssl //确定链接库
 ldconfig -v
 
-[ $? -eq 0 ] && echo -e "\e[1;35m                                                            [  OK  ] \e[0m" || echo -e "\e[1;31m                false \e[0m"
+if [ $? -eq 0 ];then 
+    echo -e "\e[1;35m                                                            [  OK  ] \e[0m"
+else
+    echo -e "\e[1;31m                                                            [ false ] \e[0m"
+    exit
+fi
 
 
 #出现报错libssl.so.1.1。。。缺少依赖库
@@ -4161,7 +4435,7 @@ else
 echo -e "\n\e[1;35m开始编译\e[0m"
 cd /root/zlib-${ZlibVersion}/
 ./configure --prefix=/usr/local/zlib
-make && make install
+make -j$(nproc) && make install
 [ $? -eq 0 ] && echo -e "\e[1;35m                                                            [  OK  ] \e[0m" || echo -e "\e[1;31m                false \e[0m"
 fi
 
@@ -4174,7 +4448,7 @@ else
 echo -e "\n\e[1;35m开始编译\e[0m"
 cd /root/openssh-${OpensshVersion}/
 ./configure --prefix=/usr/local/openssh --with-ssl-dir=/usr/local/openssl --with-zlib=/usr/local/zlib --with-pam --without-openssl-header-check
- make && make install
+make -j$(nproc) && make install
 
 [ $? -eq 0 ] && echo -e "\e[1;35m                                                            [  OK  ] \e[0m" || echo -e "\e[1;31m                false \e[0m"
 fi
@@ -4246,7 +4520,7 @@ sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd
 cp -arp /usr/local/openssh/bin/* /usr/bin/
 service sshd restart
 
-[ $? -eq 0 ] && echo -e "\e[1;35m                                                            [  OK  ] \e[0m" || echo -e "\e[1;31m                false \e[0m"
+[ $? -eq 0 ] && echo -e "\e[1;35m                                                           [  OK  ] \e[0m" || echo -e "\e[1;31m                false \e[0m"
 
 echo -e "\n\e[1;35m=================================配置开机项=================================\e[0m"
 
@@ -4363,6 +4637,7 @@ do
                 echo -e "$i\t\e[1;35m安装成功\e[0m"
             else
                 echo -e "$i\t\e[1;31m安装失败\e[0m"
+                exit
             fi
         fi
 done
@@ -4474,6 +4749,7 @@ do
                 echo -e "$i\t\e[1;35m安装成功\e[0m"
             else
                 echo -e "$i\t\e[1;31m安装失败\e[0m"
+                exit
             fi
         fi
 done
@@ -5055,6 +5331,7 @@ do
                 echo -e "$i\t\e[1;35m安装成功\e[0m"
             else
                 echo -e "$i\t\e[1;31m安装失败\e[0m"
+                exit
             fi
         fi
 done
@@ -5205,6 +5482,7 @@ do
                 echo -e "$i\t\e[1;35m安装成功\e[0m"
             else
                 echo -e "$i\t\e[1;31m安装失败\e[0m"
+                exit
             fi
         fi
 done
@@ -5492,6 +5770,7 @@ do
                 echo -e "$i\t\e[1;35m安装成功\e[0m"
             else
                 echo -e "$i\t\e[1;31m安装失败\e[0m"
+                exit
             fi
         fi
 done
@@ -5742,6 +6021,7 @@ do
                 echo -e "$i\t\e[1;35m安装成功\e[0m"
             else
                 echo -e "$i\t\e[1;31m安装失败\e[0m"
+                exit
             fi
         fi
 done
@@ -5810,6 +6090,7 @@ do
                 echo -e "$i\t\e[1;35m安装成功\e[0m"
             else
                 echo -e "$i\t\e[1;31m安装失败\e[0m"
+                exit
             fi
         fi
 done
@@ -5891,15 +6172,16 @@ ssh -V
 
 update_sshssl7(){
 initialize_variables "update_sshssl7"
-echo -e "\e[1;35m====================================================================\e[0m"
+echo -e "\e[1;35m====================================================================================================================\e[0m"
 echo -e "\e[1;35m现在已安装的版本\e[0m"
 ssh -V
+echo -e "\e[1;32m仅支持centos7\e[0m"
 echo -e "\e[1;35m本次安装的版本是sudo-${SudoVersion}\e[0m"
 echo -e "\e[1;35m本次升级的安装版本zlib-${ZlibVersion}\e[0m"
 echo -e "\e[1;35m本次安装的版本是openssl-${OpensslVersion}\e[0m"
 echo -e "\e[1;35m本次升级的安装版本openssh-${OpensshVersion}\e[0m"
 echo -e "\e[1;35m支持在线下载,如果已经下载好安装包了请将对应版本的压缩包放在root目录下\e[0m"
-echo -e "\e[1;35m====================================================================\e[0m"
+echo -e "\e[1;35m====================================================================================================================\e[0m"
 echo -e "\e[1;35m不想安装请在五秒内终止脚本\e[0m\n"
 
 
@@ -5928,7 +6210,7 @@ else
 fi
 
 if [[ ${OpensslVersion}  = 3.4.0 ]];then
-    echo -e "\e[1;32m此脚本只支持升级\e[0m"
+    echo -e "\e[1;32m当前版本此脚本支持升级\e[0m"
 else
     echo -e "\e[1;33m此脚本只支持升级openssl-${OpensslVersion}版本,其他版本不支持\e[0m"
     exit
@@ -6022,6 +6304,55 @@ fi
 #enabled=1
 #EOF
 
+##可用
+
+#  cat > /etc/yum.repos.d/CentOS-Base.repo<<'EOF'
+# CentOS-Base.repo
+#
+# The mirror system uses the connecting IP address of the client and the
+# update status of each mirror to pick mirrors that are updated to and
+# geographically close to the client.  You should use this for CentOS updates
+# unless you are manually picking other mirrors.
+#
+# If the mirrorlist= does not work for you, as a fall back you can try the 
+# remarked out baseurl= line instead.
+#
+#
+
+#[base]
+#name=CentOS-$releasever - Base
+##mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=os&infra=$infra
+#baseurl=https://repo.huaweicloud.com/centos-vault/centos/$releasever/os/$basearch/
+#gpgcheck=1
+#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+#released updates 
+#[updates]
+#name=CentOS-$releasever - Updates
+##mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=updates&infra=$infra
+#baseurl=https://repo.huaweicloud.com/centos-vault/centos/$releasever/updates/$basearch/
+#gpgcheck=1
+#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+#additional packages that may be useful
+#[extras]
+#name=CentOS-$releasever - Extras
+##mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=extras&infra=$infra
+#baseurl=https://repo.huaweicloud.com/centos-vault/centos/$releasever/extras/$basearch/
+#gpgcheck=1
+#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+##additional packages that extend functionality of existing packages
+#[centosplus]
+#name=CentOS-$releasever - Plus
+##mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=centosplus&infra=$infra
+#baseurl=https://repo.huaweicloud.com/centos-vault/centos/$releasever/centosplus/$basearch/
+#gpgcheck=1
+#enabled=0
+#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+#EOF
+
+
 
 #    cat > /etc/yum.repos.d/epel.repo <<'EOF'
 #[epel]
@@ -6032,9 +6363,34 @@ fi
 #gpgcheck=0
 #EOF
 
+#cat > /etc/yum.repos.d/epel.repo <<'EOF'
+#[epel]
+#name=Extra Packages for Enterprise Linux 7 - $basearch
+#baseurl=https://repo.huaweicloud.com/epel/7/$basearch
+##metalink=https://mirrors.fedoraproject.org/#metalink?repo=epel-7&arch=$basearch
+#failovermethod=priority
+#enabled=1
+#gpgcheck=1
+#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
 
+#[epel-debuginfo]
+#name=Extra Packages for Enterprise Linux 7 - $basearch - Debug
+#baseurl=https://repo.huaweicloud.com/epel/7/$basearch/debug
+##metalink=https://mirrors.fedoraproject.org/#metalink?repo=epel-debug-7&arch=$basearch
+#failovermethod=priority
+#enabled=0
+#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+#gpgcheck=1
 
-
+#[epel-source]
+#name=Extra Packages for Enterprise Linux 7 - $basearch - Source
+#baseurl=https://repo.huaweicloud.com/epel/7/SRPMS
+##metalink=https://mirrors.fedoraproject.org/#metalink?repo=epel-source-7&arch=$basearch
+#failovermethod=priority
+#enabled=0
+#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+#gpgcheck=1
+#EOF
 
 #    echo -e "\e[1;35mYUM 源已成功更换。\e[0m"
 #else
@@ -6093,6 +6449,7 @@ do
                 echo -e "$i\t\e[1;35m安装成功\e[0m"
             else
                 echo -e "$i\t\e[1;31m安装失败\e[0m"
+                exit
             fi
         fi
 done
@@ -6145,10 +6502,16 @@ else
 fi
 
 
-echo -e "\e[1;35m=================================================升级安装zlib======================================================\e[0m"
+echo -e "\e[1;35m=================================================升级安装zlib==========================================================\e[0m"
 
+for i in {5..1}
+do
+    echo -n "${i} "
+    echo -ne "\r"
+    sleep 1
+done
 
-echo -e "\e[1;35m===================================================编译zlib======================================================\e[0m"
+echo -e "\e[1;35m===================================================编译zlib============================================================\e[0m"
 #wget https://www.zlib.net/fossils/zlib-1.3.1.tar.gz
 tar zxf /root/zlib-${ZlibVersion}.tar.gz 
 cd /root/zlib-${ZlibVersion}
@@ -6162,9 +6525,15 @@ cd /root/
 #yum install  -y gcc gcc-c++ glibc make
 
 
+for i in {5..1}
+do
+    echo -n "${i} "
+    echo -ne "\r"
+    sleep 1
+done
 
 
-echo -e "\e[1;35m==============================================升级安装openssl版本===================================================\e[0m"
+echo -e "\e[1;35m==============================================升级安装openssl版本======================================================\e[0m"
 
 
 
@@ -6196,7 +6565,7 @@ ldconfig
 source /etc/profile
 
 #查看版本 是否安装成功
-echo -e "\e[1;35m==============================================升级后openssl版本===================================================\e[0m"
+echo -e "\e[1;35m==============================================升级后openssl版本========================================================\e[0m"
 openssl version
 PKG=`pkg-config --modversion openssl`
 
@@ -6207,11 +6576,17 @@ else
     echo -e "\e[1;32mOpenSSL 版本正确: $PKG\e[0m"
 fi
 
-sleep 5
+for i in {5..1}
+do
+    echo -n "${i} "
+    echo -ne "\r"
+    sleep 1
+done
 
 
 
-echo -e "\e[1;35m==================================================升级安装sudo===================================================\e[0m"
+
+echo -e "\e[1;35m==================================================升级安装sudo========================================================\e[0m"
 
 cd /root/
 
@@ -6252,15 +6627,23 @@ mv /usr/bin/sudo /usr/bin/sudo-${Current_Date}
 ln -s /usr/local/sudo/bin/sudo /usr/bin/sudo
 
 #查看版本
-echo -e "\e[1;35m==================================================升级后sudo版本===================================================\e[0m"
+echo -e "\e[1;35m==================================================升级后sudo版本========================================================\e[0m"
 sudo --version
-sleep 5
+
+
+
+for i in {5..1}
+do
+    echo -n "${i} "
+    echo -ne "\r"
+    sleep 1
+done
 
 
 
 
 
-echo -e "\e[1;35m===================================================升级安装openssh===================================================\e[0m"
+echo -e "\e[1;35m===================================================升级安装openssh======================================================\e[0m"
 cd /root/
 #wget https://mirrors.aliyun.com/pub/OpenBSD/OpenSSH/portable/openssh-9.9p1.tar.gz
 tar zxf /root/openssh-${OpensshVersion}.tar.gz 
@@ -6320,6 +6703,970 @@ sed -i '/$SSHD $OPTIONS && success || failure/i\       \ OPTIONS="-f /etc/ssh/ss
 
 
 
+echo -e "\n\e[1;35m==============================================修改sshd_config配置文件=======================================================\e[0m"
+
+sed -i '/PasswordAuthentication/c\PasswordAuthentication yes' /etc/ssh/sshd_config
+sed -i '/X11Forwarding/c\X11Forwarding yes' /etc/ssh/sshd_config
+sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+cp -arp /usr/local/openssh/bin/* /usr/bin/
+
+
+
+
+
+
+#添加开机启动
+chkconfig --add sshd
+chkconfig --level 2345 sshd on
+chkconfig --list
+systemctl restart sshd
+sleep 3
+echo -e "\e[1;35m===================================================更新后openssh版本==========================================================\e[0m"
+
+ssh -V
+exec openssl version &>/dev/null
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#####
+
+
+update_sshssl8(){
+initialize_variables "update_sshssl8"
+echo -e "\e[1;35m====================================================================================================================\e[0m"
+echo -e "\e[1;35m现在已安装的版本\e[0m"
+ssh -V
+echo -e "\e[1;35m本次安装的版本是sudo-${SudoVersion}\e[0m"
+echo -e "\e[1;35m本次升级的安装版本zlib-${ZlibVersion}\e[0m"
+echo -e "\e[1;35m本次安装的版本是openssl-${OpensslVersion}\e[0m"
+echo -e "\e[1;35m本次升级的安装版本openssh-${OpensshVersion}\e[0m"
+echo -e "\e[1;35m支持在线下载,如果已经下载好安装包了请将对应版本的压缩包放在root目录下\e[0m"
+echo -e "\e[1;35m====================================================================================================================\e[0m"
+
+echo -e "\e[1;31m不可用状态\e[0m\n"
+echo -e "\e[1;35m不想安装请在五秒内终止脚本\e[0m\n"
+
+for i in {5..1}
+do
+    echo -n "${i} "
+    echo -ne "\r"
+    sleep 1
+done
+
+echo -e "\e[1;35m===================================================升级前系统检查===================================================\e[0m"
+
+## 关闭严格模式
+set +u
+source /etc/profile.d/lang.sh
+
+for i in {5..1}
+do
+    echo -n "${i} "
+    echo -ne "\r"
+    sleep 1
+done
+
+
+if [  $ID = "openEuler" -o  $ID = "kylin" -o $ID = "centos" ]; then
+    echo -e "\e[1;32m当前系统是:$NAME，版本号：$VERSION_ID\e[0m"
+else
+    echo -e "\e[1;31m当前系统脚本不支持。\e[0m"
+    exit
+fi
+
+if [[ ${OpensslVersion}  = 3.4.0 ]];then
+    echo -e "\e[1;32m当前版本此脚本支持升级\e[0m"
+else
+    echo -e "\e[1;33m此脚本只支持升级openssl-${OpensslVersion}版本,其他版本不支持\e[0m"
+    exit
+fi
+
+if [ -e "/root/$0" ];then
+    echo -e "ok"
+else
+    echo -e "\e[1;33m请将脚本文件放在root目录下执行\e[0m"
+    exit
+fi
+
+#if ! ping -c 5 114.114.114.114 > /dev/null && ! ping -c 5 8.8.8.8 > /dev/null && ! ping -c 5 www.baidu.com > /dev/null; then
+#    echo -e "\e[1;31m网络不通，将跳过相关网络依赖步骤。\e[0m"
+#    NETWORK_OK=false
+#else
+#    echo -e "\e[1;32m网络正常\e[0m"
+#    NETWORK_OK=true
+#fi
+
+# 检测系统版本
+#if [ -f /etc/os-release ]; then
+#    . /etc/os-release
+#    SYSTEM_NAME=$ID
+#    VERSION_ID=${VERSION_ID:-unknown}
+#elif [ -f /etc/redhat-release ]; then
+#    SYSTEM_NAME="centos"
+#    if grep -q "release 6" /etc/redhat-release; then
+#        VERSION_ID="6"
+#    elif grep -q "release 7" /etc/redhat-release; then
+#        VERSION_ID="7"
+#    else
+#        VERSION_ID="无法判断操作系统版本"
+#    fi
+#else
+#    SYSTEM_NAME="无法判断操作系统名称"
+#    VERSION_ID="无法判断操作系统版本"
+#fi
+
+#echo -e "\e[1;35m检测到系统为：$SYSTEM_NAME $VERSION_ID\e[0m"
+# 备份并更换 YUM 源
+#if $NETWORK_OK && [ "$SYSTEM_NAME" = "centos" ] && [ "$VERSION_ID" = "7" ]; then
+#    echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
+#    echo -e "\e[1;35mYUM源检测\e[0m"
+
+    
+
+
+
+#    if [ ! -d /data/bak ];then
+#        mkdir -p /data/bak; echo "新建目录/data/bak"
+#    else
+#        echo "目录 /data/bak 已存在。"
+#    fi
+#判断文件夹是否有文件
+#    if [ "$(ls -A /etc/yum.repos.d/ 2>/dev/null)" ]; then
+#        echo -e "\e[1;35m检测到旧的 YUM 源文件，备份到 /data/bak。\e[0m"
+#        mv /etc/yum.repos.d/*  /data/bak || { echo "备份失败！"; exit 1; }
+#    else
+#        echo -e "\e[1;33m未检测到 YUM 源文件。\e[0m"
+#    fi
+#    echo -e "\e[1;35m写入新的base和epel\e[0m"
+#    cat > /etc/yum.repos.d/base.repo <<'EOF'
+#[base]
+#name=CentOS
+#baseurl=https://mirror.tuna.tsinghua.edu.cn/centos/\$releasever/os/\$basearch/
+#        https://mirrors.huaweicloud.com/centos/\$releasever/os/\$basearch/
+#        https://mirrors.cloud.tencent.com/centos/\$releasever/os/\$basearch/
+#        https://mirrors.aliyun.com/centos/\$releasever/os/\$basearch/
+#gpgcheck=0
+
+#[extras]
+#name=extras
+#baseurl=https://mirror.tuna.tsinghua.edu.cn/centos/\$releasever/extras/\$basearch
+#        https://mirrors.huaweicloud.com/centos/\$releasever/extras/\$basearch
+#        https://mirrors.cloud.tencent.com/centos/\$releasever/extras/\$basearch
+#        https://mirrors.aliyun.com/centos/\$releasever/extras/\$basearch
+       
+#gpgcheck=0
+#enabled=1
+
+
+#[epel]
+#name=EPEL
+#baseurl=https://mirror.tuna.tsinghua.edu.cn/epel/\$releasever/\$basearch
+#        https://mirrors.cloud.tencent.com/epel/\$releasever/\$basearch/
+#        https://mirrors.huaweicloud.com/epel/\$releasever/\$basearch 
+#        https://mirrors.cloud.tencent.com/epel/\$releasever/\$basearch
+#        http://mirrors.aliyun.com/epel/\$releasever/\$basearch
+#gpgcheck=0
+#enabled=1
+#EOF
+
+##可用
+
+#  cat > /etc/yum.repos.d/CentOS-Base.repo<<'EOF'
+# CentOS-Base.repo
+#
+# The mirror system uses the connecting IP address of the client and the
+# update status of each mirror to pick mirrors that are updated to and
+# geographically close to the client.  You should use this for CentOS updates
+# unless you are manually picking other mirrors.
+#
+# If the mirrorlist= does not work for you, as a fall back you can try the 
+# remarked out baseurl= line instead.
+#
+#
+
+#[base]
+#name=CentOS-$releasever - Base
+##mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=os&infra=$infra
+#baseurl=https://repo.huaweicloud.com/centos-vault/centos/$releasever/os/$basearch/
+#gpgcheck=1
+#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+#released updates 
+#[updates]
+#name=CentOS-$releasever - Updates
+##mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=updates&infra=$infra
+#baseurl=https://repo.huaweicloud.com/centos-vault/centos/$releasever/updates/$basearch/
+#gpgcheck=1
+#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+#additional packages that may be useful
+#[extras]
+#name=CentOS-$releasever - Extras
+##mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=extras&infra=$infra
+#baseurl=https://repo.huaweicloud.com/centos-vault/centos/$releasever/extras/$basearch/
+#gpgcheck=1
+#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+
+##additional packages that extend functionality of existing packages
+#[centosplus]
+#name=CentOS-$releasever - Plus
+##mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=centosplus&infra=$infra
+#baseurl=https://repo.huaweicloud.com/centos-vault/centos/$releasever/centosplus/$basearch/
+#gpgcheck=1
+#enabled=0
+#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+#EOF
+
+
+
+#    cat > /etc/yum.repos.d/epel.repo <<'EOF'
+#[epel]
+#name=epel
+#baseurl=https://mirrors.aliyun.com/epel/\$releasever/x86_64/
+#        https://mirrors.tuna.tsinghua.edu.cn/epel/7/x86_64/
+#        https://mirrors.ustc.edu.cn/epel/7/x86_64/
+#gpgcheck=0
+#EOF
+
+#cat > /etc/yum.repos.d/epel.repo <<'EOF'
+#[epel]
+#name=Extra Packages for Enterprise Linux 7 - $basearch
+#baseurl=https://repo.huaweicloud.com/epel/7/$basearch
+##metalink=https://mirrors.fedoraproject.org/#metalink?repo=epel-7&arch=$basearch
+#failovermethod=priority
+#enabled=1
+#gpgcheck=1
+#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+
+#[epel-debuginfo]
+#name=Extra Packages for Enterprise Linux 7 - $basearch - Debug
+#baseurl=https://repo.huaweicloud.com/epel/7/$basearch/debug
+##metalink=https://mirrors.fedoraproject.org/#metalink?repo=epel-debug-7&arch=$basearch
+#failovermethod=priority
+#enabled=0
+#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+#gpgcheck=1
+
+#[epel-source]
+#name=Extra Packages for Enterprise Linux 7 - $basearch - Source
+#baseurl=https://repo.huaweicloud.com/epel/7/SRPMS
+##metalink=https://mirrors.fedoraproject.org/#metalink?repo=epel-source-7&arch=$basearch
+#failovermethod=priority
+#enabled=0
+#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+#gpgcheck=1
+#EOF
+
+#    echo -e "\e[1;35mYUM 源已成功更换。\e[0m"
+#else
+#    echo -e "\e[1;33m当前系统不是 CentOS 7 或网络不通，跳过 YUM 源更换。\e[0m"
+#fi
+
+
+echo -e "\e[1;35m===================================================升级前文件检查===================================================\e[0m"
+
+declare -A files=(
+    ["/root/openssl-${OpensslVersion}.tar.gz"]="https://github.com/openssl/openssl/releases/download/openssl-${OpensslVersion}/openssl-${OpensslVersion}.tar.gz"
+    ["/root/openssh-${OpensshVersion}.tar.gz"]="https://mirrors.aliyun.com/pub/OpenBSD/OpenSSH/portable/openssh-${OpensshVersion}.tar.gz"
+    ["/root/sudo-${SudoVersion}.tar.gz"]="https://www.sudo.ws/dist/sudo-${SudoVersion}.tar.gz"
+    ["/root/zlib-${ZlibVersion}.tar.gz"]="https://www.zlib.net/fossils/zlib-${ZlibVersion}.tar.gz"
+)
+# 检查并下载文件
+for file in "${!files[@]}"; do
+    if [ ! -e "$file" ]; then
+        echo -e "\e[1;33m文件 $file 不存在，执行下载。\e[0m"
+        wget -O "$file" "${files[$file]}"
+        if [ $? -ne 0 ]; then
+            echo -e "\e[1;31m文件 $file 下载失败，请手动去下载放置在 /root 目录。\e[0m"
+            exit 1
+        fi
+    fi
+done
+
+echo -e "\e[1;32m所有必要文件均已存在。\e[0m"
+
+echo -e "\e[1;35m===================================================升级前软件安装===================================================\e[0m"
+software=(
+    "tar"
+    "gcc"
+    "pam*"
+    "make"
+    "glibc"
+    "telnet"
+    "xinetd"
+    "gcc-c++"
+    "autoconf"
+    "zlib-devel"
+    "pcre-devel"
+    "pam-devel"
+    "telnet-server"
+    "openssl-devel"
+    )
+for i in ${software[@]}
+do
+#rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+                exit
+            fi
+        fi
+done
+
+#software=(
+#    "telnet"
+#    "telnet-server"
+#    "xinetd"
+#    )
+#    for i in ${software[@]}
+#    do
+#        if rpm -q  $i &> /dev/null;then
+#            echo -e "$i\t\e[1;32m已安装\e[0m" 
+#        else 
+#            if yum -y install $i &> /dev/null; then 
+#                echo -e "$i\t\e[1;35m安装成功\e[0m"
+#            else
+#                echo -e "$i\t\e[1;31m安装失败\e[0m"
+#            fi
+#        fi
+
+#    done
+
+echo -e "\e[1;35m================================================升级前telnet安装启动测试===================================================\e[0m"
+systemctl enable --now  xinetd.service
+systemctl enable --now  telnet.socket
+
+
+cat >>/etc/securetty<<EOF
+pts/0 
+pts/1
+pts/2 
+pts/3
+pts/4
+pts/5
+pts/6
+pts/7
+pts/8
+pts/9
+pts/10
+EOF
+# 捕获 telnet 输出
+result=$(echo -e "\n" | telnet $TARGET_HOST $TARGET_PORT 2>/dev/null | grep "Connected")
+
+if [[ -n "$result" ]]; then
+    echo -e "\e[1;35mtelnet 测试成功：可以连接到 $TARGET_HOST:$TARGET_PORT\e[0m"
+else
+    echo -e "\e[1;31mtelnet 测试失败：无法连接到 $TARGET_HOST:$TARGET_PORT\e[0m"
+    exit 1
+fi
+
+
+echo -e "\e[1;35m=================================================升级安装zlib==========================================================\e[0m"
+
+
+echo -e "\e[1;35m===================================================编译zlib============================================================\e[0m"
+#wget https://www.zlib.net/fossils/zlib-1.3.1.tar.gz
+tar zxf /root/zlib-${ZlibVersion}.tar.gz 
+cd /root/zlib-${ZlibVersion}
+./configure --prefix=/usr/local/zlib
+make -j$(nproc) && make install
+ldconfig -v
+/sbin/ldconfig
+
+cd /root/
+#wget https://github.com/openssl/openssl/releases/download/openssl-3.4.0/openssl-3.4.0.tar.gz
+#yum install  -y gcc gcc-c++ glibc make
+
+
+
+
+echo -e "\e[1;35m==============================================升级安装openssl版本======================================================\e[0m"
+
+
+
+tar -zxvf /root/openssl-${OpensslVersion}.tar.gz
+if [ -e /root/openssl-${OpensslVersion} ];then
+    echo -e "\e[1;35mopenssl解压成功\e[0m"
+else
+    echo -e "\e[1;35mopenssl解压失败\e[0m"
+    exit
+fi
+cd /root/openssl-${OpensslVersion}
+./config --prefix=/usr/local/openssl --openssldir=/usr/local/openssl shared zlib
+
+make -j$(nproc) && make install  || { echo -e "\e[1;31m编译或安装失败,执行make clean 重新编译\e[0m"; exit 1; }
+                                     
+
+mv /usr/bin/openssl /usr/bin/openssl-${Current_Date}
+ln -sf /usr/local/openssl/bin/openssl /usr/bin/openssl
+
+echo "/usr/local/openssl/lib64" >> /etc/ld.so.conf.d/openssl.conf
+
+
+echo 'export LD_LIBRARY_PATH=/usr/local/openssl/lib64:${LD_LIBRARY_PATH:-""}' >> /etc/profile
+echo 'export PKG_CONFIG_PATH=/usr/local/openssl/lib64/pkgconfig:${PKG_CONFIG_PATH:-""}' >> /etc/profile
+
+
+# 刷新库缓存
+ldconfig
+source /etc/profile
+
+
+#查看版本 是否安装成功
+echo -e "\e[1;35m==============================================升级后openssl版本========================================================\e[0m"
+openssl version
+PKG=`pkg-config --modversion openssl`
+
+if [ "$PKG" != "$OpensslVersion" ]; then
+    echo -e "\e[1;31m错误: OpenSSL 版本不匹配! 期望版本: $OpensslVersion, 实际版本: $OpensslVersion1\e[0m"
+    exit 1  # 停止脚本执行
+else
+    echo -e "\e[1;32mOpenSSL 版本正确: $PKG\e[0m"
+fi
+
+sleep 5
+
+
+
+echo -e "\e[1;35m==================================================升级安装sudo========================================================\e[0m"
+sleep 3
+cd /root/
+
+#wget https://www.sudo.ws/dist/sudo-1.9.16p2.tar.gz
+tar -xvf /root/sudo-${SudoVersion}.tar.gz -C /root/
+
+cd /root/sudo-${SudoVersion}
+
+CFLAGS="-I/usr/local/openssl/include" \
+LDFLAGS="-L/usr/local/openssl/lib64" \
+./configure --prefix=/usr/local/sudo \
+            --with-openssl=/usr/local/openssl \
+            --with-openssl-includes=/usr/local/openssl/include \
+            --with-openssl-libs=/usr/local/openssl/lib64
+
+
+# 检查是否出现 OpenSSL 警告
+if grep -q "WARNING: OpenSSL dev libraries not found" configure.log; then
+    echo -e "\e[1;31m编译失败,执行make clean 清理,请检查参数\e[0m"
+    make clean
+    exit 1
+fi
+
+
+make -j$(nproc) && make install
+
+# 检查编译是否成功
+if [ $? -eq 0 ]; then
+    echo -e "\e[1;32m编译成功\e[0m"
+else
+    echo -e "\e[1;31m编译或安装失败,将make clean,请检查参数\e[0m"
+    make clean
+    exit 1
+fi
+
+
+mv /usr/bin/sudo /usr/bin/sudo-${Current_Date}
+ln -s /usr/local/sudo/bin/sudo /usr/bin/sudo
+
+#查看版本
+echo -e "\e[1;35m==================================================升级后sudo版本========================================================\e[0m"
+sudo --version
+sleep 5
+
+
+
+
+
+echo -e "\e[1;35m===================================================升级安装openssh======================================================\e[0m"
+sleep 3
+cd /root/
+#wget https://mirrors.aliyun.com/pub/OpenBSD/OpenSSH/portable/openssh-9.9p1.tar.gz
+tar zxf /root/openssh-${OpensshVersion}.tar.gz 
+if [ -e /root/openssh-${OpensshVersion} ];then
+    echo -e "\e[1;35mopenssh解压成功\e[0m"
+else
+    echo -e "\e[1;35mopenssh解压失败\e[0m"
+    exit
+fi
+
+
+
+
+
+
+cd /root/openssh-${OpensshVersion}/
+CFLAGS="-I/usr/local/openssl/include" \
+LDFLAGS="-L/usr/local/openssl/lib64" \
+./configure  --prefix=/usr/local/openssh --with-openssl-dir=/usr/local/openssl --with-zlib=/usr/local/zlib/ --with-ssl-engine
+
+
+
+make -j$(nproc) && make install && echo -e "\e[1;35m编译完成\e[0m" || { echo -e "\e[1;31m编译或安装失败,执行make clean 重新编译\e[0m"; exit 1; }   
+
+echo -e "\e[1;35m==============================================备份旧版本文件，更新新版本文件================================================\e[0m"                  
+[ -d /data/opensshbak ] || mkdir -p /data/opensshbak/
+
+mv /etc/ssh/sshd_config /data/opensshbak/sshd_config-${Current_Date}
+cp /usr/local/openssh/etc/sshd_config /etc/ssh/sshd_config
+
+mv /usr/sbin/sshd /data/opensshbak/sshd-${Current_Date}
+cp /usr/local/openssh/sbin/sshd /usr/sbin/sshd
+
+mv /usr/bin/ssh /data/opensshbak/ssh-${Current_Date}
+cp /usr/local/openssh/bin/ssh /usr/bin/ssh
+
+mv /usr/bin/ssh-keygen /data/opensshbak/ssh-keygen-${Current_Date}
+cp /usr/local/openssh/bin/ssh-keygen /usr/bin/ssh-keygen
+
+mv /etc/ssh/ssh_host_ecdsa_key.pub /data/opensshbak/ssh_host_ecdsa_key.pub-${Current_Date}
+cp /usr/local/openssh/etc/ssh_host_ecdsa_key.pub /etc/ssh/ssh_host_ecdsa_key.pub
+
+
+for  i   in  $(rpm  -qa  |grep  openssh);do  rpm  -e  $i  --nodeps ;done
+mv /etc/ssh/sshd_config.rpmsave /etc/ssh/sshd_config
+
+
+sudo cp  -a /root/openssh-9.9p1/contrib/redhat/sshd.init /etc/init.d/sshd
+chmod u+x /etc/init.d/sshd
+
+cp /etc/init.d/sshd /data/opensshbak/sshdnewbk-${Current_Date}
+sed -i '/SSHD=/c\SSHD=\/usr\/local\/openssh\/sbin\/sshd'  /etc/init.d/sshd
+sed -i '/\/usr\/bin\/ssh-keygen/c\         \/usr\/local\/openssh\/bin\/ssh-keygen -A'  /etc/init.d/sshd
+sed -i '/ssh_host_rsa_key.pub/i\                \/sbin\/restorecon \/etc\/ssh\/ssh_host_key.pub'  /etc/init.d/sshd  
+sed -i '/$SSHD $OPTIONS && success || failure/i\       \ OPTIONS="-f /etc/ssh/sshd_config"' /etc/rc.d/init.d/sshd
+
+
+
+
+echo -e "\n\e[1;35m==============================================修改sshd_config配置文件=======================================================\e[0m"
+
+sed -i '/PasswordAuthentication/c\PasswordAuthentication yes' /etc/ssh/sshd_config
+sed -i '/X11Forwarding/c\X11Forwarding yes' /etc/ssh/sshd_config
+sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+cp -arp /usr/local/openssh/bin/* /usr/bin/
+
+
+
+
+
+
+#添加开机启动
+chkconfig --add sshd
+chkconfig --level 2345 sshd on
+chkconfig --list
+systemctl restart sshd
+sleep 3
+echo -e "\e[1;35m===================================================更新后openssh版本==========================================================\e[0m"
+
+ssh -V
+exec openssl version &>/dev/null
+
+}
+
+
+
+
+
+update_sshssl9(){
+
+update_sshssl_openEuler=v7.01.07
+echo  "==============================================================================================================="
+echo -e "\e[1;$[RANDOM%7+31]m
+
+ ██████╗ ██████╗ ███████╗███╗   ██╗███████╗██╗   ██╗██╗     ███████╗██████╗ 
+██╔═══██╗██╔══██╗██╔════╝████╗  ██║██╔════╝██║   ██║██║     ██╔════╝██╔══██╗
+██║   ██║██████╔╝█████╗  ██╔██╗ ██║█████╗  ██║   ██║██║     █████╗  ██████╔╝
+██║   ██║██╔═══╝ ██╔══╝  ██║╚██╗██║██╔══╝  ██║   ██║██║     ██╔══╝  ██╔══██╗
+╚██████╔╝██║     ███████╗██║ ╚████║███████╗╚██████╔╝███████╗███████╗██║  ██║ for 2203-LTS 2403-LTS
+    \e[0m"
+echo -e "--- update-openssh-openssl-openEuler - openssh-openssl升级脚本"
+echo -e "--- version: $update_sshssl_openEuler"
+echo -e "--- https://github.com/SMILENCEQ/SMILENCEQ.github.io"
+echo "==============================================================================================================="
+. /etc/os-release
+SudoVersion=1.9.16p2
+OpensslVersion=3.4.0
+OpensslVersion1=`openssl version | awk  '{print $2}'`
+OpensshVersion=9.9p1
+ZlibVersion=1.3.1
+Current_Date=$(date +%Y%m%d%H%M%S)
+TARGET_HOST=`hostname -I`
+TARGET_PORT="22"
+
+echo -e "\e[1;35m===============================================================================================================\e[0m"
+echo -e "\e[1;35m现在已安装的版本\e[0m"
+ssh -V
+echo -e "\e[1;35m本次安装的版本是sudo-${SudoVersion}\e[0m"
+echo -e "\e[1;35m本次安装的版本是openssl-${OpensslVersion}\e[0m"
+echo -e "\e[1;35m本次升级的安装版本openssh-${OpensshVersion}\e[0m"
+echo -e "\e[1;35m本次升级的安装版本zlib-${ZlibVersion}\e[0m"
+echo -e "\e[1;35m支持在线下载,如果已经下载好安装包了请将对应版本的压缩包放在root目录下\e[0m"
+echo -e "\e[1;35m===============================================================================================================\e[0m"
+echo -e "\e[1;31m不可用状态\e[0m\n"
+echo -e "\e[1;35m不想安装请在五秒内终止脚本\e[0m\n"
+
+for i in {5..1}
+do
+    echo -n "${i} "
+    echo -ne "\r"
+    sleep 1
+done
+
+
+
+check_system(){
+
+if [  $ID = "openEuler" -o  $ID = "kylin" ]; then
+    echo -e "\e[1;31m当前系统是:$NAME，版本号：$VERSION_ID\e[0m"
+else
+    echo -e "\e[1;31m当前系统脚本不支持。\e[0m" 
+    exit
+fi
+}
+
+
+check_openssl_version(){
+if [[ ${OpensslVersion}  = 3.4.0 ]];then
+    echo -e "\e[1;35m此脚本只支持升级\e[0m"
+else
+    echo -e "\e[1;33m此脚本只支持升级openssl-${OpensslVersion}版本,其他版本不支持\e[0m"
+    exit
+fi
+
+if [ -e "/root/$0" ];then
+    echo -e "ok"
+else
+    echo -e "\e[1;33m请将脚本文件放在root目录下执行\e[0m"
+    exit
+fi
+
+}
+
+
+
+
+
+download_files() {
+# 定义文件列表及对应的下载链接
+declare -A files=(
+    ["/root/openssl-${OpensslVersion}.tar.gz"]="https://github.com/openssl/openssl/releases/download/openssl-${OpensslVersion}/openssl-${OpensslVersion}.tar.gz"
+    ["/root/openssh-${OpensshVersion}.tar.gz"]="https://mirrors.aliyun.com/pub/OpenBSD/OpenSSH/portable/openssh-${OpensshVersion}.tar.gz"
+    ["/root/sudo-${SudoVersion}.tar.gz"]="https://www.sudo.ws/dist/sudo-${SudoVersion}.tar.gz"
+    ["/root/zlib-${ZlibVersion}.tar.gz"]="https://www.zlib.net/fossils/zlib-${ZlibVersion}.tar.gz"
+)
+# 检查并下载文件
+for file in "${!files[@]}"; do
+    if [ ! -e "$file" ]; then
+        echo -e "\e[1;33m文件 $file 不存在，执行下载。\e[0m"
+        wget -O "$file" "${files[$file]}"
+        if [ $? -ne 0 ]; then
+            echo -e "\e[1;31m文件 $file 下载失败，请手动去下载放置在 /root 目录。\e[0m"
+            exit 1
+        fi
+    fi
+done
+
+echo -e "\e[1;35m所有必要文件均已存在。\e[0m"
+}
+
+
+
+
+
+
+
+telnet_install(){
+echo -e "\e[1;35m===================================================安装telnet===================================================\e[0m"
+software=(
+    "telnet"
+    "telnet-server"
+    "xinetd"
+    )
+for i in ${software[@]}
+do
+rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+done
+
+
+systemctl enable --now  xinetd.service
+systemctl enable --now  telnet.socket
+
+
+cat >>/etc/securetty<<EOF
+pts/0 
+pts/1
+pts/2 
+pts/3
+pts/4
+pts/5
+pts/6
+pts/7
+pts/8
+pts/9
+pts/10
+EOF
+
+
+
+
+}
+
+check_telnet(){
+
+# 捕获 telnet 输出
+result=$(echo -e "\n" | telnet $TARGET_HOST $TARGET_PORT 2>/dev/null | grep "Connected")
+
+if [[ -n "$result" ]]; then
+    echo -e "\e[1;35mtelnet 测试成功：可以连接到 $TARGET_HOST:$TARGET_PORT\e[0m"
+else
+    echo -e "\e[1;31mtelnet 测试失败：无法连接到 $TARGET_HOST:$TARGET_PORT\e[0m"
+    exit 1
+fi
+
+
+
+}
+
+#yum groupinstall "Development Tools" -y
+#yum install perl gcc zlib-devel make -y
+
+sleep 5
+
+
+update_zlib(){
+echo -e "\e[1;35m===================================================编译zlib======================================================\e[0m"
+#wget https://www.zlib.net/fossils/zlib-1.3.1.tar.gz
+tar zxf /root/zlib-${ZlibVersion}.tar.gz 
+cd /root/zlib-${ZlibVersion}
+./configure --prefix=/usr/local/zlib
+make -j$(nproc) && make install
+ldconfig -v
+/sbin/ldconfig
+
+}
+
+
+
+update_openssl(){
+echo -e "\e[1;35m===================================================升级openssl===================================================\e[0m"
+cd /root/
+#wget https://github.com/openssl/openssl/releases/download/openssl-3.4.0/openssl-3.4.0.tar.gz
+#yum install  -y gcc gcc-c++ glibc make
+software=(
+    "tar"
+    "gcc"
+    "gcc-c++"
+    "openssl-devel"
+    "zlib-devel"
+    "make"
+    "glibc"
+    "autoconf"
+    "pcre-devel"
+    "pam-devel"
+    "pam*"
+    )
+for i in ${software[@]}
+do
+#rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+            fi
+        fi
+done
+
+
+
+
+
+
+
+tar -zxvf /root/openssl-${OpensslVersion}.tar.gz
+if [ -e /root/openssl-${OpensslVersion} ];then
+    echo -e "\e[1;35mopenssl解压成功\e[0m"
+else
+    echo -e "\e[1;35mopenssl解压失败\e[0m"
+    exit
+fi
+cd /root/openssl-${OpensslVersion}
+./config --prefix=/usr/local/openssl --openssldir=/usr/local/openssl shared zlib
+
+
+make -j$(nproc) && make install  || { echo -e "\e[1;31m编译或安装失败,执行make clean 重新编译\e[0m"; exit 1; }                                             
+
+mv /usr/bin/openssl /usr/bin/openssl-${Current_Date}
+ln -sf /usr/local/openssl/bin/openssl /usr/bin/openssl
+
+echo "/usr/local/openssl/lib64" >> /etc/ld.so.conf.d/openssl.conf
+
+
+echo 'export LD_LIBRARY_PATH=/usr/local/openssl/lib64:${LD_LIBRARY_PATH:-""}' >> /etc/profile
+echo 'export PKG_CONFIG_PATH=/usr/local/openssl/lib64/pkgconfig:${PKG_CONFIG_PATH:-""}' >> /etc/profile
+
+
+# 刷新库缓存
+ldconfig
+source /etc/profile
+
+#查看版本 是否安装成功
+echo -e "\e[1;35m===================================================升级后版本===================================================\e[0m"
+openssl version
+PKG=`pkg-config --modversion openssl`
+
+if [ "$PKG" != "$OpensslVersion" ]; then
+    echo -e "\e[1;31m错误: OpenSSL 版本不匹配! 期望版本: $OpensslVersion, 实际版本: $OpensslVersion1\e[0m"
+    exit 1  # 停止脚本执行
+else
+    echo -e "\e[1;32mOpenSSL 版本正确: $PKG\e[0m"
+fi
+
+sleep 5
+}
+
+
+
+
+
+update_sudo(){
+
+echo -e "\e[1;35m===================================================升级sudo===================================================\e[0m"
+
+cd /root/
+
+#wget https://www.sudo.ws/dist/sudo-1.9.16p2.tar.gz
+tar -xvf /root/sudo-${SudoVersion}.tar.gz -C /root/
+
+cd /root/sudo-${SudoVersion}
+
+CFLAGS="-I/usr/local/openssl/include" \
+LDFLAGS="-L/usr/local/openssl/lib64" \
+./configure --prefix=/usr/local/sudo \
+            --with-openssl=/usr/local/openssl \
+            --with-openssl-includes=/usr/local/openssl/include \
+            --with-openssl-libs=/usr/local/openssl/lib64
+
+
+# 检查是否出现 OpenSSL 警告
+if grep -q "WARNING: OpenSSL dev libraries not found" configure.log; then
+    echo -e "\e[1;31m编译失败,执行make clean 清理,请检查参数\e[0m"
+    make clean
+    exit 1
+fi
+
+
+make -j$(nproc) && make install
+
+# 检查编译是否成功
+if [ $? -eq 0 ]; then
+    echo -e "\e[1;32m编译成功\e[0m"
+else
+    echo -e "\e[1;31m编译或安装失败,将make clean,请检查参数\e[0m"
+    make clean
+    exit 1
+fi
+
+
+mv /usr/bin/sudo /usr/bin/sudo-${Current_Date}
+ln -s /usr/local/sudo/bin/sudo /usr/bin/sudo
+
+#查看版本
+echo -e "\e[1;35m===================================================升级后版本===================================================\e[0m"
+sudo --version
+sleep 5
+
+}
+
+
+
+
+update_openssh(){
+
+echo -e "\e[1;35m===================================================升级openssh===================================================\e[0m"
+cd /root/
+#wget https://mirrors.aliyun.com/pub/OpenBSD/OpenSSH/portable/openssh-9.9p1.tar.gz
+tar zxf /root/openssh-${OpensshVersion}.tar.gz 
+if [ -e /root/openssh-${OpensshVersion} ];then
+    echo -e "\e[1;35mopenssh解压成功\e[0m"
+else
+    echo -e "\e[1;35mopenssh解压失败\e[0m"
+    exit
+fi
+
+
+
+
+
+
+cd /root/openssh-${OpensshVersion}/
+CFLAGS="-I/usr/local/openssl/include" \
+LDFLAGS="-L/usr/local/openssl/lib64" \
+./configure  --prefix=/usr/local/openssh --with-openssl-dir=/usr/local/openssl --with-zlib=/usr/local/zlib/ --with-ssl-engine
+
+
+
+make -j$(nproc) && make install && echo -e "\e[1;35m编译完成\e[0m" || { echo -e "\e[1;31m编译或安装失败,执行make clean 重新编译\e[0m"; exit 1; }   
+
+echo -e "\e[1;35m================================================备份旧文件，迁入新文件================================================\e[0m"                  
+[ -d /data/opensshbak ] || mkdir -p /data/opensshbak/
+
+mv /etc/ssh/sshd_config /data/opensshbak/sshd_config-${Current_Date}
+cp /usr/local/openssh/etc/sshd_config /etc/ssh/sshd_config
+
+mv /usr/sbin/sshd /data/opensshbak/sshd-${Current_Date}
+cp /usr/local/openssh/sbin/sshd /usr/sbin/sshd
+
+mv /usr/bin/ssh /data/opensshbak/ssh-${Current_Date}
+cp /usr/local/openssh/bin/ssh /usr/bin/ssh
+
+mv /usr/bin/ssh-keygen /data/opensshbak/ssh-keygen-${Current_Date}
+cp /usr/local/openssh/bin/ssh-keygen /usr/bin/ssh-keygen
+
+mv /etc/ssh/ssh_host_ecdsa_key.pub /data/opensshbak/ssh_host_ecdsa_key.pub-${Current_Date}
+cp /usr/local/openssh/etc/ssh_host_ecdsa_key.pub /etc/ssh/ssh_host_ecdsa_key.pub
+
+
+for  i   in  $(rpm  -qa  |grep  openssh);do  rpm  -e  $i  --nodeps ;done
+mv /etc/ssh/sshd_config.rpmsave /etc/ssh/sshd_config
+
+
+sudo cp  -a /root/openssh-9.9p1/contrib/redhat/sshd.init /etc/init.d/sshd
+chmod u+x /etc/init.d/sshd
+
+cp /etc/init.d/sshd /data/opensshbak/sshdnewbk-${Current_Date}
+sed -i '/SSHD=/c\SSHD=\/usr\/local\/openssh\/sbin\/sshd'  /etc/init.d/sshd
+sed -i '/\/usr\/bin\/ssh-keygen/c\         \/usr\/local\/openssh\/bin\/ssh-keygen -A'  /etc/init.d/sshd
+sed -i '/ssh_host_rsa_key.pub/i\                \/sbin\/restorecon \/etc\/ssh\/ssh_host_key.pub'  /etc/init.d/sshd  
+sed -i '/$SSHD $OPTIONS && success || failure/i\       \ OPTIONS="-f /etc/ssh/sshd_config"' /etc/rc.d/init.d/sshd
+
+
+
+
 echo -e "\n\e[1;35m==============================================修改sshd_config配置文件===============================================\e[0m"
 
 sed -i '/PasswordAuthentication/c\PasswordAuthentication yes' /etc/ssh/sshd_config
@@ -6343,10 +7690,296 @@ echo -e "\e[1;35m===================================================更新后ope
 
 ssh -V
 exec openssl version &>/dev/null
+}
 
 
+
+main() {
+    check_system
+    check_openssl_version
+    download_files
+    telnet_install
+    check_telnet
+    update_zlib
+    update_openssl
+    update_sudo
+    update_openssh
+}
+
+main "$@"
 
 }
+
+
+
+
+
+
+#===================================================================================================================================================================
+#适用与centos6系统升级openssh9.9p1和openssl3.4.0
+
+update_sshssl10(){
+
+initialize_variables "update_sshssl10"
+
+echo -e "\e[1;35m====================================================================\e[0m"
+echo -e "\e[1;35m现在已安装的版本\e[0m"
+openssl version
+#ssh -V &>/dev/null
+echo -e "\e[1;35m仅支持centos6\e[0m"
+echo -e "\e[1;35m本次安装的版本是openssl-${OpensslVersion}\e[0m"
+echo -e "\e[1;35m本次升级的安装版本openssh-${OpensshVersion},perl-${PerlVersion}\e[0m"
+echo -e "\e[1;35m离线安装，请提前准备好对应版本的压缩包放在root目录下\e[0m"
+echo -e "\e[1;35mcentos6的yum源请提前准备好\e[0m"
+echo -e "\e[1;35m====================================================================\e[0m"
+echo -e "\e[1;35m不想安装请在五秒内终止脚本\e[0m\n"
+echo -e "\e[1;31m未测试!!!!!!!!!!\e[0m"
+for i in {5..1}
+do
+    echo -n "${i} "
+    echo -ne "\r"
+    sleep 1
+done
+
+echo -e "\e[1;35m==========================检查系统==================================\e[0m"
+
+if [ ${SystemVersion} -lt 7 ];then
+    echo -e "\e[1;32m检测系统为centos6允许执行\e[0m"
+else
+    echo -e "\e[1;31m检测系统不是centos6,脚本不支持\e[0m"
+    exit
+fi
+
+
+if [[ ${OpensslVersion1}  < 3 ]];then
+    echo -e "\e[1;32m脚本支持升级openssl\e[0m"
+else
+    echo -e "\e[1;31m检测openssl版本高于3版本,脚本不支持\e[0m"
+    exit
+fi
+
+echo "执行网络检测"
+if ping -c 1 www.baidu.com >/dev/null;then
+    echo -e "\e[1;32m"网络正常"\e[0m"
+else
+    echo -e "\e[1;31m"网络不通"\e[0m"
+    
+fi
+
+
+
+echo -e "\e[1;35m=========================安装依赖包=================================\e[0m"
+software=("gcc"
+    "gcc-c++"
+    "glibc"
+    "make"
+    "autoconf"
+    "openssl"
+    "openssl-devel"
+    "pcre-devel"
+    "pam-devel"
+    "pam*"
+    "rpm-build"
+    "zlib"
+    "zlib-devel"
+    )
+for i in ${software[@]}
+do
+#rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+                exit
+            fi
+        fi
+done
+
+
+
+echo -e "\e[1;35m=========================源文件检查==================================\e[0m"
+if [ -a "openssl-${OpensslVersion}.tar.gz" ];then
+    echo -e "\e[1;35m openssl-${OpensslVersion}文件存在\e[0m"
+else
+    echo -e "\e[1;33m openssl-${OpensslVersion}文件不存在，开始下载\e[0m"
+    wget --no-check-certificate https://www.openssl.org/source/openssl-${OpensslVersion}.tar.gz
+fi
+
+
+if [ -a "openssh-${OpensshVersion}.tar.gz" ];then
+    echo -e "\e[1;35m openssh-${OpensshVersion}文件存在\e[0m"
+else
+    echo -e "\e[1;33m openssh-${OpensshVersion}文件不存在，开始下载\e[0m"
+    wget http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-${OpensshVersion}.tar.gz
+fi
+
+if [ -a "perl-${PerlVersion}.tar.gz" ];then
+    echo -e "\e[1;35m perl-${PerlVersion}文件存在\e[0m"
+else
+    echo -e "\e[1;33m perl-${PerlVersion}文件不存在，开始下载\e[0m"
+    wget --no-check-certificate  https://www.cpan.org/src/5.0/perl-${PerlVersion}.tar.gz
+fi
+
+
+echo -e "\e[1;35m=========================安装perl=================================\e[0m"
+
+
+echo -e "\e[1;35m========================解压源文件================================\e[0m"
+tar -zxf /root/perl-${PerlVersion}.tar.gz 
+cd /root/perl-${PerlVersion}
+
+echo -e "\e[1;35m=========================编译安装=================================\e[0m"
+./Configure -des -Dprefix=/usr/local/perl 
+make -j 2 && make install 
+mv /usr/bin/perl /usr/bin/perl.bak 
+ln -s /usr/local/perl/bin/perl /usr/bin/perl
+
+cd
+echo -e "\e[1;35m=======================查看安装版本================================\e[0m"
+perl -v 
+
+sleep 3
+
+
+
+
+
+
+echo -e "\e[1;35m======================安装openssl=================================\e[0m"
+
+echo -e "\e[1;35m=======================解压源文件==================================\e[0m"
+
+
+
+tar -zxvf /root/openssl-${OpensslVersion}.tar.gz
+cd /root/openssl-${OpensslVersion}
+
+
+echo -e "\e[1;35m========================编译安装=================================\e[0m"
+./config --prefix=/usr/local/ssl shared zlib
+make -j 2 && make install 
+
+mv /usr/bin/openssl /usr/bin/openssl.bak 
+ln -s /usr/local/ssl/bin/openssl /usr/bin/openssl 
+echo "/usr/local/ssl/lib64">> //etc/ld.so.conf.d/ssl.conf
+/sbin/ldconfig 
+
+cd
+echo -e "\e[1;35m=======================查看安装版本===============================\e[0m"
+openssl version 
+
+sleep 3
+
+
+
+
+
+
+
+
+echo -e "\e[1;35m======================安装openssh===============================\e[0m"
+
+mv -f /etc/ssh /etc/ssh.bak
+for i in `rpm -qa |grep openssh-`; do rpm -e --nodeps $i; done
+#wget http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-8.8p1.tar.gz
+
+
+
+
+echo -e "\e[1;35m========================解压源文件================================\e[0m"
+tar -zxf /root/openssh-${OpensshVersion}.tar.gz
+cd /root/openssh-${OpensshVersion}
+
+
+
+
+echo -e "\e[1;35m=========================编译安装=================================\e[0m"
+#不指定位置
+#./configure --prefix=/usr/local/openssh --sysconfdir=/etc/ssh --with-pam --with-zlib --with-md5-passwords
+#指定位置
+./configure --prefix=/usr/local/openssh --sysconfdir=/etc/ssh --with-pam --with-zlib --with-md5-passwords --with-tcp-wrappers --without-openssl-header-check --with-ssl-dir=/usr/local/ssl
+make -j2 && make install
+
+
+ln -sf /usr/local/openssh/bin/* /usr/bin
+ln -sf /usr/local/openssh/sbin/sshd /usr/sbin
+echo -e "PermitRootLogin yes\nPasswordAuthentication yes\nPubkeyAuthentication yes\nX11Forwarding yes">>/etc/ssh/sshd_config
+
+
+
+[ -a /root/openssh-${OpensshVersion}/contrib/redhat/sshd.init ] && cp /root/openssh-${OpensshVersion}/contrib/redhat/sshd.init /etc/init.d/sshd || echo -e "\e[1;35m更新/etc/init.d/sshd文件出错\e[0m"
+[ -a /root/openssh-${OpensshVersion}/contrib/sshd.pam.generic ] && cp /root/openssh-${OpensshVersion}/contrib/sshd.pam.generic  /etc/pam.d/sshd || echo -e "\e[1;35m更新/etc/init.d/sshd文件出错\e[0m"
+
+
+cat > /etc/pam.d/sshd << 'EOF'
+#%PAM-1.0
+auth       required     /lib64/security/pam_unix.so shadow nodelay
+account    required     /lib64/security/pam_nologin.so
+account    required     /lib64/security/pam_unix.so
+password   required     /lib64/security/pam_cracklib.so
+password   required     /lib64/security/pam_unix.so shadow nullok use_authtok
+session    required     /lib64/security/pam_unix.so
+session    required     /lib64/security/pam_limits.so
+auth       include      /etc/pam.d/password-auth
+session    include      /etc/pam.d/password-auth
+password   include      /etc/pam.d/password-auth
+account    include      /etc/pam.d/password-auth
+auth       required     pam_sepermit.so
+account    required     pam_nologin.so
+session    optional     pam_keyinit.so force revoke
+session    required     pam_limits.so
+EOF
+
+#两种方法
+sudo ln -s /lib64/security/pam_unix.so /lib/security/pam_unix.so
+sudo ln -s /lib64/security/pam_nologin.so /lib/security/pam_nologin.so
+sudo ln -s /lib64/security/pam_cracklib.so /lib/security/pam_cracklib.so
+sudo ln -s /lib64/security/pam_limits.so /lib/security/pam_limits.so
+
+echo -e "\e[1;35m=========================重启sshd服务================================\e[0m"
+echo -e "\e[1;35m重启过程中以下命令脚本可能无法继续执行可手动执行\e[0m"
+echo -e "\e[1;35mchkconfig --add sshd\e[0m"
+echo -e "\e[1;35mchkconfig --level 2345 sshd on\e[0m"
+nohup service sshd restart &
+chkconfig --add sshd
+chkconfig --level 2345 sshd on
+cd
+echo -e "\e[1;35m======================更新后openssh版本===============================\e[0m"
+
+ssh -V
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -6692,6 +8325,46 @@ docker version
 
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -10785,6 +12458,7 @@ if [[ -n "${1-}" ]];then
         update_sshssl5 |\
         update_sshssl6 |\
         update_sshssl7 |\
+        update_sshssl8 |\
         c7_yum_docker |\
         c7_yum2_docker |\
         c8_yum_docker |\
@@ -11956,15 +13630,16 @@ set_centos7_yum(){
 **********           centos7                      **********
 **********                                        **********
 **********         1.返回上一目录                 **********
-**********                                        ********** 
-**********         2.配置EPEL源                   **********
-**********         3.配置阿里源                   **********
-**********         4.配置清华源                   **********
-**********         5.配置网易源                   **********
-**********         6.配置华为源                   **********
-**********         7.配置南京大学源               **********
-**********         8.配置所有源(无挂载磁盘)       **********
-**********         9.配置所有源(有挂载磁盘)       **********
+**********                                        **********
+**********         2.挂载本地镜像源               ********** 
+**********         3.配置EPEL源                   **********
+**********         4.配置阿里源                   **********
+**********         5.配置清华源                   **********
+**********         6.配置网易源                   **********
+**********         7.配置华为源                   **********
+**********         8.配置南京大学源               **********
+**********         9.配置所有源(无挂载磁盘)       **********
+**********         10.配置所有源(有挂载磁盘)      **********
 **********                                        **********
 **********         0.退出                         **********
 **********                                        **********
@@ -11978,28 +13653,31 @@ EOF
 
 read -p "$(echo -e '\e[1;36m请输入序号: \e[0m')" Menu
 case $Menu in
-2)      set_epel
+2)      set_local_yum
         ;;
 
-3)      set_ali
+3)      set_epel
         ;;
 
-4)      set_qinghua
+4)      set_ali
         ;;
 
-5)      set_wangyi
+5)      set_qinghua
         ;;
 
-6)      set_huawei
+6)      set_wangyi
         ;;
 
-7)      set_nanjing
+7)      set_huawei
         ;;
 
-8)      set_yum3_centos7
+8)      set_nanjing
         ;;
 
-9)      set_yum2_centos7
+9)      set_yum3_centos7
+        ;;
+
+10)      set_yum2_centos7
         ;;
 
 
@@ -12891,11 +14569,14 @@ while :;do
 7.适用于从openssl3.*版本升级到openssl3.3.1,openssh9.8p1
 8.适用于从openssl1.*版本升级到openssl3.3.1,openssh9.8p1
 11.适用于从openssl1.*版本升级到openssl3.4.0,openssh9.9p1
+
 **********以下支持在centos6系列使用*************
 9.适用于从openssl1.*版本升级到openssl3.3.1,openssh9.8p1
+14.适用于从openssl1.*版本升级到openssl3.4.0,openssh9.9p1
 
 **********以下支持在openEuler系列使用*************
 10.适用于从openssl1.*版本升级到openssl3.3.1,openssh9.8p1
+12.适用于从openssl1.*版本升级到openssl3.4.0,openssh9.9p1
 
 ============================================================
 
@@ -12917,6 +14598,9 @@ while :;do
 **********           9.升级openssl,openssh        **********
 **********           10.升级openssl,openssh       **********
 **********           11.升级openssl,openssh       **********
+**********           12.升级openssl,openssh       **********
+**********           13.升级openssl,openssh       **********
+**********           14.升级openssl,openssh       **********
 **********                                        **********
 **********           0.退出                       ********** 
 **********                                        **********
@@ -12963,6 +14647,15 @@ case $Menu in
         ;;
 
 11)    update_sshssl7
+        ;;
+
+12)    update_sshssl8
+        ;;
+
+13)    update_sshssl9
+        ;;
+
+14)    update_sshssl10
         ;;
 
 0)     set_et
@@ -13379,7 +15072,7 @@ case $option in
 0) 	set_et
 	;;
 
-*)      echo -e "\n\e[1;31m输入无效!请输入正确的选项!!!\e[0m" 
+*)      echo -e "\n\e[1;31m输入无效!请输入正确的选项!!!\e[0m"
         ;;
 esac
 done
