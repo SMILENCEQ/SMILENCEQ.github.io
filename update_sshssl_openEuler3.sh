@@ -1,5 +1,5 @@
 #!/bin/bash
-update_sshssl_openEuler=v7.01.07
+update_sshssl_openEuler=v1.01.07
 echo  "==============================================================================================================="
 echo -e "\e[1;$[RANDOM%7+31]m
 
@@ -7,7 +7,7 @@ echo -e "\e[1;$[RANDOM%7+31]m
 ██╔═══██╗██╔══██╗██╔════╝████╗  ██║██╔════╝██║   ██║██║     ██╔════╝██╔══██╗
 ██║   ██║██████╔╝█████╗  ██╔██╗ ██║█████╗  ██║   ██║██║     █████╗  ██████╔╝
 ██║   ██║██╔═══╝ ██╔══╝  ██║╚██╗██║██╔══╝  ██║   ██║██║     ██╔══╝  ██╔══██╗
-╚██████╔╝██║     ███████╗██║ ╚████║███████╗╚██████╔╝███████╗███████╗██║  ██║ for 2203-LTS 2403-LTS
+╚██████╔╝██║     ███████╗██║ ╚████║███████╗╚██████╔╝███████╗███████╗██║  ██║ for 2203-LTS
     \e[0m"
 echo -e "--- update-openssh-openssl-openEuler - openssh-openssl升级脚本"
 echo -e "--- version: $update_sshssl_openEuler"
@@ -31,6 +31,7 @@ echo -e "\e[1;35m本次安装的版本是openssl-${OpensslVersion}\e[0m"
 echo -e "\e[1;35m本次升级的安装版本openssh-${OpensshVersion}\e[0m"
 echo -e "\e[1;35m本次升级的安装版本zlib-${ZlibVersion}\e[0m"
 echo -e "\e[1;35m支持在线下载,如果已经下载好安装包了请将对应版本的压缩包放在root目录下\e[0m"
+echo -e "\e[1;33m适用于openEuler2203从openssl1.*版本升级到openssl3.4.0,openssh9.9p1\e[0m"
 echo -e "\e[1;35m===============================================================================================================\e[0m"
 echo -e "\e[1;35m不想安装请在五秒内终止脚本\e[0m\n"
 
@@ -41,21 +42,22 @@ do
     sleep 1
 done
 
-
-
+yum clean all
+yum makecache
 check_system(){
-
-if [  $ID = "openEuler" -o  $ID = "kylin" ]; then
-    echo -e "\e[1;31m当前系统是:$NAME，版本号：$VERSION_ID\e[0m"
+echo -e "\e[1;35m===================================================升级前系统检查===================================================\e[0m"
+if [  $ID = "openEuler" ]; then
+    echo -e "\e[1;31m当前系统:$NAME，版本号：$VERSION_ID 脚本支持。\e[0m"
 else
-    echo -e "\e[1;31m当前系统脚本不支持。\e[0m" 
+    echo -e "\e[1;31m当前系统:$NAME，版本号：$VERSION_ID 脚本不支持。\e[0m" 
+    exit
 fi
 }
 
 
 check_openssl_version(){
 if [[ ${OpensslVersion}  = 3.4.0 ]];then
-    echo -e "\e[1;35m此脚本只支持升级\e[0m"
+    echo -e "\e[1;35m此脚本支持升级\e[0m"
 else
     echo -e "\e[1;33m此脚本只支持升级openssl-${OpensslVersion}版本,其他版本不支持\e[0m"
     exit
@@ -107,12 +109,22 @@ telnet_install(){
 echo -e "\e[1;35m===================================================安装telnet===================================================\e[0m"
 software=(
     "telnet"
-    "telnet-server"
     "xinetd"
+    "telnet-server"
     )
 for i in ${software[@]}
 do
-rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+#rpm -q $i &> /dev/null && echo -e "$i\t\e[1;32m已安装\e[0m" || { yum -y install $i &> /dev/null; echo -e "$i\t\e[1;35m安装成功\e[0m" ; }
+        if rpm -q  $i &> /dev/null;then
+            echo -e "$i\t\e[1;32m已安装\e[0m" 
+        else 
+            if yum -y install $i &> /dev/null; then 
+                echo -e "$i\t\e[1;35m安装成功\e[0m"
+            else
+                echo -e "$i\t\e[1;31m安装失败\e[0m"
+                exit
+            fi
+        fi
 done
 
 
@@ -183,15 +195,15 @@ cd /root/
 software=(
     "tar"
     "gcc"
-    "gcc-c++"
-    "openssl-devel"
-    "zlib-devel"
+    "pam*"
     "make"
     "glibc"
+    "gcc-c++"
     "autoconf"
-    "pcre-devel"
     "pam-devel"
-    "pam*"
+    "zlib-devel"
+    "pcre-devel"
+    "openssl-devel"
     )
 for i in ${software[@]}
 do
