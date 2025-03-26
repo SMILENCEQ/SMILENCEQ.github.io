@@ -69,8 +69,8 @@ color () {
 
 ##########################################
 ## Starting
-CshVersion=v4.9.0
-DATETIME1=2025-03-25
+CshVersion=v4.9.1
+DATETIME1=2025-03-26
 echo  "============================================================"
 echo -e "\e[1;$[RANDOM%7+31]m
 
@@ -6202,10 +6202,10 @@ do
 done
 
 
-if [  $ID = "openEuler" -o  $ID = "kylin" -o $ID = "centos" ]; then
-    echo -e "\e[1;32m当前系统是:$NAME，版本号：$VERSION_ID\e[0m"
+if [ $ID = "centos" ]; then
+    echo -e "\e[1;32m当前系统:$NAME，版本号：$VERSION_ID 脚本支持。\e[0m"
 else
-    echo -e "\e[1;31m当前系统脚本不支持。\e[0m"
+    echo -e "\e[1;31m当前系统:$NAME，版本号：$VERSION_ID 脚本不支持。\e[0m"
     exit
 fi
 
@@ -6745,7 +6745,7 @@ exec openssl version &>/dev/null
 
 
 
-#####
+#####适用于openEuler2203从openssl1.*版本升级到openssl3.4.0,openssh9.9p1
 
 
 update_sshssl8(){
@@ -6758,9 +6758,10 @@ echo -e "\e[1;35m本次升级的安装版本zlib-${ZlibVersion}\e[0m"
 echo -e "\e[1;35m本次安装的版本是openssl-${OpensslVersion}\e[0m"
 echo -e "\e[1;35m本次升级的安装版本openssh-${OpensshVersion}\e[0m"
 echo -e "\e[1;35m支持在线下载,如果已经下载好安装包了请将对应版本的压缩包放在root目录下\e[0m"
+echo -e "\e[1;33m适用于openEuler2203从openssl1.*版本升级到openssl3.4.0,openssh9.9p1\e[0m"
 echo -e "\e[1;35m====================================================================================================================\e[0m"
 
-echo -e "\e[1;31m不可用状态\e[0m\n"
+#echo -e "\e[1;31m不可用状态\e[0m\n"
 echo -e "\e[1;35m不想安装请在五秒内终止脚本\e[0m\n"
 
 for i in {5..1}
@@ -6769,6 +6770,13 @@ do
     echo -ne "\r"
     sleep 1
 done
+
+
+yum clean all
+yum makecache
+
+
+
 
 echo -e "\e[1;35m===================================================升级前系统检查===================================================\e[0m"
 
@@ -6784,10 +6792,10 @@ do
 done
 
 
-if [  $ID = "openEuler" -o  $ID = "kylin" -o $ID = "centos" ]; then
-    echo -e "\e[1;32m当前系统是:$NAME，版本号：$VERSION_ID\e[0m"
+if [  $ID = "openEuler" ]; then
+    echo -e "\e[1;32m当前系统是:$NAME，版本号：$VERSION_ID 脚本支持。\e[0m"
 else
-    echo -e "\e[1;31m当前系统脚本不支持。\e[0m"
+    echo -e "\e[1;31m当前系统:$NAME，版本号：$VERSION_ID 脚本不支持。\e[0m"
     exit
 fi
 
@@ -6805,179 +6813,7 @@ else
     exit
 fi
 
-#if ! ping -c 5 114.114.114.114 > /dev/null && ! ping -c 5 8.8.8.8 > /dev/null && ! ping -c 5 www.baidu.com > /dev/null; then
-#    echo -e "\e[1;31m网络不通，将跳过相关网络依赖步骤。\e[0m"
-#    NETWORK_OK=false
-#else
-#    echo -e "\e[1;32m网络正常\e[0m"
-#    NETWORK_OK=true
-#fi
 
-# 检测系统版本
-#if [ -f /etc/os-release ]; then
-#    . /etc/os-release
-#    SYSTEM_NAME=$ID
-#    VERSION_ID=${VERSION_ID:-unknown}
-#elif [ -f /etc/redhat-release ]; then
-#    SYSTEM_NAME="centos"
-#    if grep -q "release 6" /etc/redhat-release; then
-#        VERSION_ID="6"
-#    elif grep -q "release 7" /etc/redhat-release; then
-#        VERSION_ID="7"
-#    else
-#        VERSION_ID="无法判断操作系统版本"
-#    fi
-#else
-#    SYSTEM_NAME="无法判断操作系统名称"
-#    VERSION_ID="无法判断操作系统版本"
-#fi
-
-#echo -e "\e[1;35m检测到系统为：$SYSTEM_NAME $VERSION_ID\e[0m"
-# 备份并更换 YUM 源
-#if $NETWORK_OK && [ "$SYSTEM_NAME" = "centos" ] && [ "$VERSION_ID" = "7" ]; then
-#    echo -e "\n\e[1;35m======================================================================================================================================\e[0m"
-#    echo -e "\e[1;35mYUM源检测\e[0m"
-
-    
-
-
-
-#    if [ ! -d /data/bak ];then
-#        mkdir -p /data/bak; echo "新建目录/data/bak"
-#    else
-#        echo "目录 /data/bak 已存在。"
-#    fi
-#判断文件夹是否有文件
-#    if [ "$(ls -A /etc/yum.repos.d/ 2>/dev/null)" ]; then
-#        echo -e "\e[1;35m检测到旧的 YUM 源文件，备份到 /data/bak。\e[0m"
-#        mv /etc/yum.repos.d/*  /data/bak || { echo "备份失败！"; exit 1; }
-#    else
-#        echo -e "\e[1;33m未检测到 YUM 源文件。\e[0m"
-#    fi
-#    echo -e "\e[1;35m写入新的base和epel\e[0m"
-#    cat > /etc/yum.repos.d/base.repo <<'EOF'
-#[base]
-#name=CentOS
-#baseurl=https://mirror.tuna.tsinghua.edu.cn/centos/\$releasever/os/\$basearch/
-#        https://mirrors.huaweicloud.com/centos/\$releasever/os/\$basearch/
-#        https://mirrors.cloud.tencent.com/centos/\$releasever/os/\$basearch/
-#        https://mirrors.aliyun.com/centos/\$releasever/os/\$basearch/
-#gpgcheck=0
-
-#[extras]
-#name=extras
-#baseurl=https://mirror.tuna.tsinghua.edu.cn/centos/\$releasever/extras/\$basearch
-#        https://mirrors.huaweicloud.com/centos/\$releasever/extras/\$basearch
-#        https://mirrors.cloud.tencent.com/centos/\$releasever/extras/\$basearch
-#        https://mirrors.aliyun.com/centos/\$releasever/extras/\$basearch
-       
-#gpgcheck=0
-#enabled=1
-
-
-#[epel]
-#name=EPEL
-#baseurl=https://mirror.tuna.tsinghua.edu.cn/epel/\$releasever/\$basearch
-#        https://mirrors.cloud.tencent.com/epel/\$releasever/\$basearch/
-#        https://mirrors.huaweicloud.com/epel/\$releasever/\$basearch 
-#        https://mirrors.cloud.tencent.com/epel/\$releasever/\$basearch
-#        http://mirrors.aliyun.com/epel/\$releasever/\$basearch
-#gpgcheck=0
-#enabled=1
-#EOF
-
-##可用
-
-#  cat > /etc/yum.repos.d/CentOS-Base.repo<<'EOF'
-# CentOS-Base.repo
-#
-# The mirror system uses the connecting IP address of the client and the
-# update status of each mirror to pick mirrors that are updated to and
-# geographically close to the client.  You should use this for CentOS updates
-# unless you are manually picking other mirrors.
-#
-# If the mirrorlist= does not work for you, as a fall back you can try the 
-# remarked out baseurl= line instead.
-#
-#
-
-#[base]
-#name=CentOS-$releasever - Base
-##mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=os&infra=$infra
-#baseurl=https://repo.huaweicloud.com/centos-vault/centos/$releasever/os/$basearch/
-#gpgcheck=1
-#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
-
-#released updates 
-#[updates]
-#name=CentOS-$releasever - Updates
-##mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=updates&infra=$infra
-#baseurl=https://repo.huaweicloud.com/centos-vault/centos/$releasever/updates/$basearch/
-#gpgcheck=1
-#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
-
-#additional packages that may be useful
-#[extras]
-#name=CentOS-$releasever - Extras
-##mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=extras&infra=$infra
-#baseurl=https://repo.huaweicloud.com/centos-vault/centos/$releasever/extras/$basearch/
-#gpgcheck=1
-#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
-
-##additional packages that extend functionality of existing packages
-#[centosplus]
-#name=CentOS-$releasever - Plus
-##mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=centosplus&infra=$infra
-#baseurl=https://repo.huaweicloud.com/centos-vault/centos/$releasever/centosplus/$basearch/
-#gpgcheck=1
-#enabled=0
-#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
-#EOF
-
-
-
-#    cat > /etc/yum.repos.d/epel.repo <<'EOF'
-#[epel]
-#name=epel
-#baseurl=https://mirrors.aliyun.com/epel/\$releasever/x86_64/
-#        https://mirrors.tuna.tsinghua.edu.cn/epel/7/x86_64/
-#        https://mirrors.ustc.edu.cn/epel/7/x86_64/
-#gpgcheck=0
-#EOF
-
-#cat > /etc/yum.repos.d/epel.repo <<'EOF'
-#[epel]
-#name=Extra Packages for Enterprise Linux 7 - $basearch
-#baseurl=https://repo.huaweicloud.com/epel/7/$basearch
-##metalink=https://mirrors.fedoraproject.org/#metalink?repo=epel-7&arch=$basearch
-#failovermethod=priority
-#enabled=1
-#gpgcheck=1
-#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
-
-#[epel-debuginfo]
-#name=Extra Packages for Enterprise Linux 7 - $basearch - Debug
-#baseurl=https://repo.huaweicloud.com/epel/7/$basearch/debug
-##metalink=https://mirrors.fedoraproject.org/#metalink?repo=epel-debug-7&arch=$basearch
-#failovermethod=priority
-#enabled=0
-#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
-#gpgcheck=1
-
-#[epel-source]
-#name=Extra Packages for Enterprise Linux 7 - $basearch - Source
-#baseurl=https://repo.huaweicloud.com/epel/7/SRPMS
-##metalink=https://mirrors.fedoraproject.org/#metalink?repo=epel-source-7&arch=$basearch
-#failovermethod=priority
-#enabled=0
-#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
-#gpgcheck=1
-#EOF
-
-#    echo -e "\e[1;35mYUM 源已成功更换。\e[0m"
-#else
-#    echo -e "\e[1;33m当前系统不是 CentOS 7 或网络不通，跳过 YUM 源更换。\e[0m"
-#fi
 
 
 echo -e "\e[1;35m===================================================升级前文件检查===================================================\e[0m"
@@ -7084,6 +6920,12 @@ fi
 
 echo -e "\e[1;35m=================================================升级安装zlib==========================================================\e[0m"
 
+for i in {5..1}
+do
+    echo -n "${i} "
+    echo -ne "\r"
+    sleep 1
+done
 
 echo -e "\e[1;35m===================================================编译zlib============================================================\e[0m"
 #wget https://www.zlib.net/fossils/zlib-1.3.1.tar.gz
@@ -7103,7 +6945,12 @@ cd /root/
 
 echo -e "\e[1;35m==============================================升级安装openssl版本======================================================\e[0m"
 
-
+for i in {5..1}
+do
+    echo -n "${i} "
+    echo -ne "\r"
+    sleep 1
+done
 
 tar -zxvf /root/openssl-${OpensslVersion}.tar.gz
 if [ -e /root/openssl-${OpensslVersion} ];then
@@ -7150,7 +6997,12 @@ sleep 5
 
 
 echo -e "\e[1;35m==================================================升级安装sudo========================================================\e[0m"
-sleep 3
+for i in {5..1}
+do
+    echo -n "${i} "
+    echo -ne "\r"
+    sleep 1
+done
 cd /root/
 
 #wget https://www.sudo.ws/dist/sudo-1.9.16p2.tar.gz
@@ -7192,14 +7044,19 @@ ln -s /usr/local/sudo/bin/sudo /usr/bin/sudo
 #查看版本
 echo -e "\e[1;35m==================================================升级后sudo版本========================================================\e[0m"
 sudo --version
-sleep 5
+
 
 
 
 
 
 echo -e "\e[1;35m===================================================升级安装openssh======================================================\e[0m"
-sleep 3
+for i in {5..1}
+do
+    echo -n "${i} "
+    echo -ne "\r"
+    sleep 1
+done
 cd /root/
 #wget https://mirrors.aliyun.com/pub/OpenBSD/OpenSSH/portable/openssh-9.9p1.tar.gz
 tar zxf /root/openssh-${OpensshVersion}.tar.gz 
@@ -14561,7 +14418,7 @@ while :;do
 
 ============================================================
 
-**********以下支持在centos7系列使用*************
+**********以下支持在centos7.9使用******************
 3.升级openssl到1.1.1w版本
 4.升级openssh到9.7p1版本
 5 适用于从openssl1.*版本升级到openssl1.1.1w,openssh9.7p1
@@ -14570,13 +14427,15 @@ while :;do
 8.适用于从openssl1.*版本升级到openssl3.3.1,openssh9.8p1
 11.适用于从openssl1.*版本升级到openssl3.4.0,openssh9.9p1
 
-**********以下支持在centos6系列使用*************
+**********以下支持在centos6系列使用******************
 9.适用于从openssl1.*版本升级到openssl3.3.1,openssh9.8p1
 14.适用于从openssl1.*版本升级到openssl3.4.0,openssh9.9p1
 
-**********以下支持在openEuler系列使用*************
+**********以下支持在openEuler2203-LTS使用*************
 10.适用于从openssl1.*版本升级到openssl3.3.1,openssh9.8p1
 12.适用于从openssl1.*版本升级到openssl3.4.0,openssh9.9p1
+
+**********以下支持在openEuler2403-LTS使用*************
 
 ============================================================
 
