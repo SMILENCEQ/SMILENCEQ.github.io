@@ -133,6 +133,20 @@ csh v4.8.6
 函数所在处:update_sshssl4
 ```
 
+### local_yum_update_sshssl
+
+```sh
+centos7.9 配置本地yum源进行升级openssl3.4.0和openssh9.9p1
+```
+
+
+
+
+
+
+
+
+
 ### csh.py
 
 ```py
