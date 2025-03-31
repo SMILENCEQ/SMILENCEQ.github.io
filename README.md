@@ -139,7 +139,11 @@ csh v4.8.6
 centos7.9 配置本地yum源进行升级openssl3.4.0和openssh9.9p1
 ```
 
+### update_sshssl_yum.sh
 
+```sh
+centos7.9 配置本地yum源和网络源进行升级openssl3.4.0和openssh9.9p1
+```
 
 
 
